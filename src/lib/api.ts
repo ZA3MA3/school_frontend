@@ -48,9 +48,9 @@ apiClient.interceptors.response.use(
 // Auth API functions
 export const authApi = {
   // Login - backend sets HttpOnly cookie
-  login: async (username: string, password: string) => {
+  login: async (email: string, password: string) => {
     const response = await apiClient.post('/users/login/', {
-      username,
+      email,
       password,
     });
     return response.data;
@@ -78,6 +78,169 @@ export const authApi = {
     return response.data;
   },
 };
+
+// Teacher API functions
+export const teacherApi = {
+  // Get all classes taught by teacher
+  getClasses: async () => {
+    const response = await apiClient.get('/users/teacher/classes/');
+    return response.data;
+  },
+  
+  // Get all exercises created by teacher
+  getExercises: async () => {
+    const response = await apiClient.get('/users/teacher/exercises/');
+    return response.data;
+  },
+  
+  // Get all submissions for teacher's exercises
+  getSubmissions: async () => {
+    const response = await apiClient.get('/users/teacher/submissions/');
+    return response.data;
+  },
+  
+  // Create new exercise
+  createExercise: async (data: FormData) => {
+    const response = await apiClient.post('/users/teacher/exercises/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  
+  // Download submission file
+  downloadSubmission: (submissionId: number) => {
+    return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
+  },
+  
+  // Grade a submission
+  gradeSubmission: async (submissionId: number, grade: number, feedback: string) => {
+    const response = await apiClient.patch(`/users/submissions/${submissionId}/grade/`, {
+      grade,
+      feedback,
+    });
+    return response.data;
+  },
+  
+  // Get teacher's announcements
+  getAnnouncements: async () => {
+    const response = await apiClient.get('/users/teacher/announcements/');
+    return response.data;
+  },
+  
+  // Create a new announcement
+  createAnnouncement: async (title: string, content: string, classId?: number) => {
+    const data: { title: string; content: string; related_class?: number } = { title, content };
+    if (classId) {
+      data.related_class = classId;
+    }
+    const response = await apiClient.post('/users/teacher/announcements/', data);
+    return response.data;
+  },
+};
+
+// Student API functions
+export const studentApi = {
+  // Get all available classes
+  getAllClasses: async () => {
+    const response = await apiClient.get('/users/classes/');
+    return response.data;
+  },
+  
+  // Enroll in a class
+  enrollInClass: async (classId: number) => {
+    const response = await apiClient.post('/users/student/enroll/', {
+      class_id: classId,
+    });
+    return response.data;
+  },
+  
+  // Get all exercises available to student
+  getExercises: async () => {
+    const response = await apiClient.get('/users/student/exercises/');
+    return response.data;
+  },
+  
+  // Get student's submissions
+  getSubmissions: async () => {
+    const response = await apiClient.get('/users/student/submissions/');
+    return response.data;
+  },
+  
+  // Submit an exercise
+  submitExercise: async (data: FormData) => {
+    const response = await apiClient.post('/users/student/submissions/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  
+  // Download exercise file
+  downloadExercise: (exerciseId: number) => {
+    return `${API_BASE_URL}/users/exercises/${exerciseId}/download/`;
+  },
+  
+  // Download submission file
+  downloadSubmission: (submissionId: number) => {
+    return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
+  },
+  
+  // Get student's announcements
+  getAnnouncements: async () => {
+    const response = await apiClient.get('/users/student/announcements/');
+    return response.data;
+  },
+};
+
+// Parent API functions
+export const parentApi = {
+  // Get all children linked to parent
+  getChildren: async () => {
+    const response = await apiClient.get('/users/parent/children/');
+    return response.data;
+  },
+  
+  // Get announcements for parent's children
+  getAnnouncements: async () => {
+    const response = await apiClient.get('/users/parent/announcements/');
+    return response.data;
+  },
+};
+
+// Chat API functions
+export const chatApi = {
+  // Get contacts (teachers for parents, parents for teachers)
+  getContacts: async () => {
+    const response = await apiClient.get('/users/chat/contacts/');
+    return response.data;
+  },
+  
+  // Get messages with a specific contact
+  getMessages: async (contactId: number) => {
+    const response = await apiClient.get(`/users/chat/messages/${contactId}/`);
+    return response.data;
+  },
+  
+  // Send a message
+  sendMessage: async (contactId: number, content: string) => {
+    const response = await apiClient.post(`/users/chat/messages/${contactId}/`, {
+      content,
+    });
+    return response.data;
+  },
+  
+  // Get a WebSocket ticket for authentication
+  getWsTicket: async () => {
+    const response = await apiClient.post('/users/ws-ticket/');
+    return response.data.ticket;
+  },
+};
+
+// WebSocket URL
+export const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/chat/';
 
 // Generic API export
 export default apiClient;

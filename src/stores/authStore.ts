@@ -7,11 +7,11 @@ export type UserRole = 'TEACHER' | 'STUDENT' | 'PARENT' | 'ADMIN';
 // User type
 export interface User {
   id: number;
-  username: string;
-  role: UserRole;
-  email?: string;
+  email: string;
   firstName?: string;
   lastName?: string;
+  fullName?: string;
+  role: UserRole;
 }
 
 // Auth state interface

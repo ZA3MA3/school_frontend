@@ -27,22 +27,22 @@ export function useAuth() {
   const store = useAuthStore();
   
   // Login function
-  const login = useCallback(async (username: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     store.setLoading(true);
     store.setError(null);
     
     try {
       // Call login API - backend sets HttpOnly cookie
-      const data = await authApi.login(username, password);
+      const data = await authApi.login(email, password);
       
       // Store user data in Zustand (JWT is in HttpOnly cookie, not accessible to JS)
       store.login({
         id: data.user?.id || 0,
-        username: data.user?.username || username,
-        role: data.role,
-        email: data.user?.email,
+        email: data.user?.email || email,
         firstName: data.user?.first_name,
         lastName: data.user?.last_name,
+        fullName: data.user?.full_name,
+        role: data.role,
       });
       
       // Redirect based on role
