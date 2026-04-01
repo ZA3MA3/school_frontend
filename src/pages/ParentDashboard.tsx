@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { parentApi } from '@/lib/api';
+import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
+import { parentApi, chatApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare } from 'lucide-react';
+import { Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
+import Notifications from '@/components/Notifications';
 
 interface Student {
   id: number;
@@ -29,25 +31,64 @@ interface AnnouncementData {
   };
 }
 
+interface AttendanceRecord {
+  id: number;
+  student: number;
+  student_name: string;
+  related_class: number;
+  class_name: string;
+  date: string;
+  status: 'PRESENT' | 'ABSENT';
+  marked_by: number;
+  teacher_name: string;
+  marked_at: string;
+}
+
+interface AttendanceData {
+  child_name: string;
+  attendance: AttendanceRecord[];
+}
+
 export default function ParentDashboard() {
   const { logout, user } = useAuth();
   const [children, setChildren] = useState<Student[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
+
+  const handleChatUnreadUpdate = useCallback((count: number) => {
+    setChatUnreadCount(count);
+  }, []);
+
+  const { unreadCount, refresh: refreshNotifications } = useNotificationWebSocket(handleChatUnreadUpdate);
+
+  const loadChatUnreadCount = useCallback(async () => {
+    try {
+      const data = await chatApi.getUnreadCounts();
+      setChatUnreadCount(data.total_unread || 0);
+    } catch (error) {
+      console.error('Error loading chat unread count:', error);
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+    loadChatUnreadCount();
+  }, [loadChatUnreadCount]);
 
   const loadData = async () => {
     try {
-      const [childrenData, announcementsData] = await Promise.all([
+      const [childrenData, announcementsData, attendanceData] = await Promise.all([
         parentApi.getChildren(),
         parentApi.getAnnouncements(),
+        parentApi.getAttendance(),
       ]);
       setChildren(childrenData);
       setAnnouncements(announcementsData);
+      setAttendance(attendanceData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -72,9 +113,22 @@ export default function ParentDashboard() {
             <p className="text-sm text-gray-600">Welcome, {user?.fullName || user?.email}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowChat(!showChat)}>
+            <Button variant="outline" onClick={() => setShowNotifications(true)} className="relative">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+            <Button variant="outline" onClick={() => setShowChat(!showChat)} className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
               Chat
+              {chatUnreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
+                </span>
+              )}
             </Button>
             <Button variant="outline" onClick={logout}>
               <LogOut className="h-4 w-4 mr-2" />
@@ -86,8 +140,18 @@ export default function ParentDashboard() {
 
       {showChat && (
         <div className="fixed inset-0 z-50 bg-white" style={{ height: 'calc(100vh - 73px)', top: 73 }}>
-          <Chat onClose={() => setShowChat(false)} />
+          <Chat 
+            onClose={() => setShowChat(false)} 
+            onUnreadCountChange={(count) => setChatUnreadCount(count)}
+          />
         </div>
+      )}
+
+      {showNotifications && (
+        <Notifications onClose={() => {
+          setShowNotifications(false);
+          refreshNotifications();
+        }} />
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={showChat ? { display: 'none' } : {}}>
@@ -184,6 +248,62 @@ export default function ParentDashboard() {
                               </div>
                             </div>
                           ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Attendance Records</CardTitle>
+            <CardDescription>Attendance for your children</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {attendance.length === 0 ? (
+              <p className="text-muted-foreground">No attendance records yet</p>
+            ) : (
+              <div className="space-y-6 max-h-[500px] overflow-y-auto">
+                {attendance.map((childData) => (
+                  <div key={childData.child_name} className="border rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h4 className="font-semibold text-lg">{childData.child_name}</h4>
+                      <div className="flex gap-4">
+                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                          <UserCheck className="inline h-4 w-4 mr-1" />
+                          {childData.attendance.filter(r => r.status === 'PRESENT').length} Present
+                        </span>
+                        <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                          <UserX className="inline h-4 w-4 mr-1" />
+                          {childData.attendance.filter(r => r.status === 'ABSENT').length} Absent
+                        </span>
+                      </div>
+                    </div>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {childData.attendance.map((record) => (
+                        <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <div>
+                            <p className="font-medium">{record.class_name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(record.date).toLocaleDateString()} - Teacher: {record.teacher_name}
+                            </p>
+                          </div>
+                          <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                            record.status === 'PRESENT' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {record.status === 'PRESENT' ? (
+                              <UserCheck className="h-4 w-4" />
+                            ) : (
+                              <UserX className="h-4 w-4" />
+                            )}
+                            <span className="text-sm font-medium">{record.status}</span>
+                          </div>
                         </div>
                       ))}
                     </div>

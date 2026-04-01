@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 import { studentApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { LogOut, FileText, Download, CheckCircle, UserPlus } from 'lucide-react';
+import { LogOut, FileText, Download, CheckCircle, UserPlus, UserCheck, UserX, Bell } from 'lucide-react';
 import { AxiosError } from 'axios';
+import Notifications from '@/components/Notifications';
 
 interface Class {
   id: number;
@@ -12,7 +14,7 @@ interface Class {
   description: string;
   teacher: number;
   teacher_name: string;
-  students: number[];
+  students: Array<{ id: number; full_name: string }>;
   student_count: number;
 }
 
@@ -44,17 +46,33 @@ interface Announcement {
   created_at: string;
 }
 
+interface AttendanceRecord {
+  id: number;
+  student: number;
+  student_name: string;
+  related_class: number;
+  class_name: string;
+  date: string;
+  status: 'PRESENT' | 'ABSENT';
+  marked_by: number;
+  teacher_name: string;
+  marked_at: string;
+}
+
 export default function StudentDashboard() {
   const { logout, user } = useAuth();
+  const { unreadCount, refresh: refreshNotifications } = useNotificationWebSocket();
   const [classes, setClasses] = useState<Class[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState<number | null>(null);
   const [selectedExercise, setSelectedExercise] = useState<number | null>(null);
   const [submitFile, setSubmitFile] = useState<File | null>(null);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -62,16 +80,18 @@ export default function StudentDashboard() {
 
   const loadData = async () => {
     try {
-      const [classesData, exercisesData, submissionsData, announcementsData] = await Promise.all([
+      const [classesData, exercisesData, submissionsData, announcementsData, attendanceData] = await Promise.all([
         studentApi.getAllClasses(),
         studentApi.getExercises(),
         studentApi.getSubmissions(),
         studentApi.getAnnouncements(),
+        studentApi.getAttendance(),
       ]);
       setClasses(classesData);
       setExercises(exercisesData);
       setSubmissions(submissionsData);
       setAnnouncements(announcementsData);
+      setAttendance(attendanceData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -138,7 +158,9 @@ export default function StudentDashboard() {
   };
 
   const isEnrolled = (classId: number) => {
-    return classes.find((cls) => cls.id === classId)?.students.includes(user?.id || 0) || false;
+    const cls = classes.find((cls) => cls.id === classId);
+    if (!cls) return false;
+    return cls.students.some((s) => s.id === (user?.id || 0));
   };
 
   if (loading) {
@@ -157,12 +179,29 @@ export default function StudentDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Student Dashboard</h1>
             <p className="text-sm text-gray-600">Welcome, {user?.fullName || user?.email}</p>
           </div>
-          <Button variant="outline" onClick={logout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            Logout
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowNotifications(true)} className="relative">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+            <Button variant="outline" onClick={logout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
+          </div>
         </div>
       </header>
+
+      {showNotifications && (
+        <Notifications onClose={() => {
+          setShowNotifications(false);
+          refreshNotifications();
+        }} />
+      )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
@@ -233,6 +272,57 @@ export default function StudentDashboard() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>My Attendance</CardTitle>
+            <CardDescription>Your attendance record</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {attendance.length === 0 ? (
+              <p className="text-muted-foreground">No attendance records yet</p>
+            ) : (
+              <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="p-3 bg-green-50 rounded">
+                    <p className="text-2xl font-bold text-green-600">
+                      {attendance.filter(r => r.status === 'PRESENT').length}
+                    </p>
+                    <p className="text-sm text-green-600">Present</p>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded">
+                    <p className="text-2xl font-bold text-red-600">
+                      {attendance.filter(r => r.status === 'ABSENT').length}
+                    </p>
+                    <p className="text-sm text-red-600">Absent</p>
+                  </div>
+                </div>
+                {attendance.map((record) => (
+                  <div key={record.id} className="flex items-center justify-between p-3 border rounded">
+                    <div>
+                      <p className="font-medium">{record.class_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(record.date).toLocaleDateString()} - Teacher: {record.teacher_name}
+                      </p>
+                    </div>
+                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                      record.status === 'PRESENT' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {record.status === 'PRESENT' ? (
+                        <UserCheck className="h-4 w-4" />
+                      ) : (
+                        <UserX className="h-4 w-4" />
+                      )}
+                      <span className="text-sm font-medium">{record.status}</span>
                     </div>
                   </div>
                 ))}

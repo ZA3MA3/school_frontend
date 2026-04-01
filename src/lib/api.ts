@@ -138,6 +138,20 @@ export const teacherApi = {
     const response = await apiClient.post('/users/teacher/announcements/', data);
     return response.data;
   },
+  
+  // Get attendance for a class on a date
+  getAttendance: async (classId: number, date: string) => {
+    const response = await apiClient.get('/users/teacher/attendance/', {
+      params: { class_id: classId, date },
+    });
+    return response.data;
+  },
+  
+  // Mark attendance for students
+  markAttendance: async (records: Array<{ student_id: number; class_id: number; date: string; status: string }>) => {
+    const response = await apiClient.post('/users/teacher/attendance/', { records });
+    return response.data;
+  },
 };
 
 // Student API functions
@@ -193,6 +207,12 @@ export const studentApi = {
     const response = await apiClient.get('/users/student/announcements/');
     return response.data;
   },
+  
+  // Get student's attendance
+  getAttendance: async () => {
+    const response = await apiClient.get('/users/student/attendance/');
+    return response.data;
+  },
 };
 
 // Parent API functions
@@ -206,6 +226,12 @@ export const parentApi = {
   // Get announcements for parent's children
   getAnnouncements: async () => {
     const response = await apiClient.get('/users/parent/announcements/');
+    return response.data;
+  },
+  
+  // Get attendance for parent's children
+  getAttendance: async () => {
+    const response = await apiClient.get('/users/parent/attendance/');
     return response.data;
   },
 };
@@ -236,6 +262,33 @@ export const chatApi = {
   getWsTicket: async () => {
     const response = await apiClient.post('/users/ws-ticket/');
     return response.data.ticket;
+  },
+  
+  // Get unread message counts
+  getUnreadCounts: async () => {
+    const response = await apiClient.get('/users/chat/unread-count/');
+    return response.data;
+  },
+};
+
+// Notification API functions
+export const notificationApi = {
+  // Get all notifications
+  getNotifications: async () => {
+    const response = await apiClient.get('/users/notifications/');
+    return response.data;
+  },
+  
+  // Get unread notification count
+  getUnreadCount: async () => {
+    const response = await apiClient.get('/users/notifications/unread-count/');
+    return response.data.count;
+  },
+  
+  // Mark a notification as read
+  markAsRead: async (notificationId: number) => {
+    const response = await apiClient.post(`/users/notifications/${notificationId}/read/`);
+    return response.data;
   },
 };
 

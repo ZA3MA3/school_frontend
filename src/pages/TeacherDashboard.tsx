@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { teacherApi } from '@/lib/api';
+import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
+import { teacherApi, chatApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, LogOut, Upload, FileText, Clock, Download, CheckCircle, Star, MessageSquare, Megaphone } from 'lucide-react';
+import { BookOpen, LogOut, Upload, FileText, Clock, Download, CheckCircle, Star, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
 
 interface Class {
@@ -14,6 +15,7 @@ interface Class {
   description: string;
   teacher_name: string;
   student_count: number;
+  students?: Array<{ id: number; full_name: string }>;
 }
 
 interface Exercise {
@@ -46,6 +48,19 @@ interface Announcement {
   created_at: string;
 }
 
+interface AttendanceRecord {
+  id: number;
+  student: number;
+  student_name: string;
+  related_class: number;
+  class_name: string;
+  date: string;
+  status: 'PRESENT' | 'ABSENT';
+  marked_by: number;
+  teacher_name: string;
+  marked_at: string;
+}
+
 export default function TeacherDashboard() {
   const { logout, user } = useAuth();
   const [classes, setClasses] = useState<Class[]>([]);
@@ -64,16 +79,39 @@ export default function TeacherDashboard() {
   const [feedbackText, setFeedbackText] = useState('');
   const [isGrading, setIsGrading] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+
+  const handleChatUnreadUpdate = useCallback((count: number) => {
+    setChatUnreadCount(count);
+  }, []);
+
+  useNotificationWebSocket(handleChatUnreadUpdate);
   const [announcementTitle, setAnnouncementTitle] = useState('');
   const [announcementContent, setAnnouncementContent] = useState('');
   const [announcementClassId, setAnnouncementClassId] = useState('');
   const [isPosting, setIsPosting] = useState(false);
   const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
+  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
+  const [attendanceClassId, setAttendanceClassId] = useState('');
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
+  const [existingAttendance, setExistingAttendance] = useState<AttendanceRecord[]>([]);
+  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
+
+  const loadChatUnreadCount = useCallback(async () => {
+    try {
+      const data = await chatApi.getUnreadCounts();
+      setChatUnreadCount(data.total_unread || 0);
+    } catch (error) {
+      console.error('Error loading chat unread count:', error);
+    }
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+    loadChatUnreadCount();
+  }, [loadChatUnreadCount]);
 
   const loadData = async () => {
     try {
@@ -182,6 +220,48 @@ export default function TeacherDashboard() {
     }
   };
 
+  const handleLoadAttendance = async () => {
+    if (!attendanceClassId || !attendanceDate) return;
+    
+    try {
+      const data = await teacherApi.getAttendance(parseInt(attendanceClassId), attendanceDate);
+      setExistingAttendance(data);
+      
+      const records: Record<number, 'PRESENT' | 'ABSENT'> = {};
+      data.forEach((rec: AttendanceRecord) => {
+        records[rec.student] = rec.status;
+      });
+      setAttendanceRecords(records);
+    } catch (error) {
+      console.error('Error loading attendance:', error);
+    }
+  };
+
+  const handleSaveAttendance = async () => {
+    if (!attendanceClassId || !attendanceDate) return;
+    
+    setIsSavingAttendance(true);
+    try {
+      const records = Object.entries(attendanceRecords).map(([studentId, status]) => ({
+        student_id: parseInt(studentId),
+        class_id: parseInt(attendanceClassId),
+        date: attendanceDate,
+        status,
+      }));
+      
+      await teacherApi.markAttendance(records);
+      //alert('Attendance saved successfully!');
+      handleLoadAttendance();
+    } catch (error) {
+      console.error('Error saving attendance:', error);
+      alert('Failed to save attendance');
+    } finally {
+      setIsSavingAttendance(false);
+    }
+  };
+
+  const selectedClass = classes.find(c => c.id === parseInt(attendanceClassId));
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -199,9 +279,14 @@ export default function TeacherDashboard() {
             <p className="text-sm text-gray-600">Welcome, {user?.fullName || user?.email}</p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowChat(!showChat)}>
+            <Button variant="outline" onClick={() => setShowChat(!showChat)} className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
               Chat
+              {chatUnreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
+                </span>
+              )}
             </Button>
             <Button variant="outline" onClick={logout}>
               <LogOut className="h-4 w-4 mr-2" />
@@ -213,7 +298,10 @@ export default function TeacherDashboard() {
 
       {showChat && (
         <div className="fixed inset-0 z-50 bg-white" style={{ height: 'calc(100vh - 73px)', top: 73 }}>
-          <Chat onClose={() => setShowChat(false)} />
+          <Chat 
+            onClose={() => setShowChat(false)} 
+            onUnreadCountChange={(count) => setChatUnreadCount(count)}
+          />
         </div>
       )}
 
@@ -441,6 +529,119 @@ export default function TeacherDashboard() {
           </CardContent>
         </Card>
 
+        <div className="mb-6">
+          <Button onClick={() => setShowAttendanceForm(!showAttendanceForm)}>
+            <UserCheck className="h-4 w-4 mr-2" />
+            {showAttendanceForm ? 'Cancel' : 'Mark Attendance'}
+          </Button>
+        </div>
+
+        {showAttendanceForm && (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Mark Attendance</CardTitle>
+              <CardDescription>Mark students as present or absent for today</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="attendanceClass">Select Class</Label>
+                    <select
+                      id="attendanceClass"
+                      value={attendanceClassId}
+                      onChange={(e) => setAttendanceClassId(e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      <option value="">Choose a class</option>
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="attendanceDate">Date</Label>
+                    <Input
+                      id="attendanceDate"
+                      type="date"
+                      value={attendanceDate}
+                      onChange={(e) => setAttendanceDate(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                
+                {attendanceClassId && (
+                  <Button onClick={handleLoadAttendance}>
+                    Load Students
+                  </Button>
+                )}
+
+                {attendanceClassId && selectedClass && (
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-3">Students in {selectedClass.name}</h4>
+                    <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                      {selectedClass.students?.map((student) => (
+                        <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                          <span className="font-medium">{student.full_name}</span>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant={attendanceRecords[student.id] === 'PRESENT' ? 'default' : 'outline'}
+                              onClick={() => setAttendanceRecords(prev => ({ ...prev, [student.id]: 'PRESENT' }))}
+                            >
+                              <UserCheck className="h-4 w-4 mr-1" />
+                              Present
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant={attendanceRecords[student.id] === 'ABSENT' ? 'destructive' : 'outline'}
+                              onClick={() => setAttendanceRecords(prev => ({ ...prev, [student.id]: 'ABSENT' }))}
+                            >
+                              <UserX className="h-4 w-4 mr-1" />
+                              Absent
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-4">
+                      <Button 
+                        onClick={handleSaveAttendance} 
+                        disabled={isSavingAttendance || Object.keys(attendanceRecords).length === 0}
+                      >
+                        {isSavingAttendance ? 'Saving...' : 'Save Attendance'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {existingAttendance.length > 0 && (
+                  <div className="border rounded-lg p-4">
+                    <h4 className="font-medium mb-3">Attendance Summary for {attendanceDate}</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-3 bg-green-50 rounded">
+                        <p className="text-2xl font-bold text-green-600">
+                          {existingAttendance.filter(r => r.status === 'PRESENT').length}
+                        </p>
+                        <p className="text-sm text-green-600">Present</p>
+                      </div>
+                      <div className="p-3 bg-red-50 rounded">
+                        <p className="text-2xl font-bold text-red-600">
+                          {existingAttendance.filter(r => r.status === 'ABSENT').length}
+                        </p>
+                        <p className="text-sm text-red-600">Absent</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -558,7 +759,7 @@ export default function TeacherDashboard() {
 
         {/* Grading Dialog */}
         {gradingSubmission && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <Card className="max-w-md w-full mx-4">
               <CardHeader>
                 <CardTitle>Grade Submission</CardTitle>
