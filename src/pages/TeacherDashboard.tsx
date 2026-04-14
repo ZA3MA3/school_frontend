@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
-import { teacherApi, chatApi } from '@/lib/api';
+import { teacherApi, studentApi, chatApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,11 @@ interface Class {
   students?: Array<{ id: number; full_name: string }>;
 }
 
+interface Skill {
+  id: number;
+  name: string;
+}
+
 interface Exercise {
   id: number;
   title: string;
@@ -25,6 +30,7 @@ interface Exercise {
   file_url: string | null;
   class_name: string;
   due_date: string | null;
+  skills: Skill[];
 }
 
 interface Submission {
@@ -61,8 +67,17 @@ interface AttendanceRecord {
   marked_at: string;
 }
 
+const TABS = [
+  { id: 'my-classes', label: 'My Classes' },
+  { id: 'mark-attendance', label: 'Mark Attendance' },
+  { id: 'create-announcement', label: 'Create Announcement' },
+  { id: 'upload-exercise', label: 'Upload New Exercise' },
+  { id: 'student-submissions', label: 'Student Submissions' },
+] as const;
+
 export default function TeacherDashboard() {
   const { logout, user } = useAuth();
+  const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-classes');
   const [classes, setClasses] = useState<Class[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
@@ -81,6 +96,8 @@ export default function TeacherDashboard() {
   const [showChat, setShowChat] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
 
   const handleChatUnreadUpdate = useCallback((count: number) => {
     setChatUnreadCount(count);
@@ -115,16 +132,18 @@ export default function TeacherDashboard() {
 
   const loadData = async () => {
     try {
-      const [classesData, exercisesData, submissionsData, announcementsData] = await Promise.all([
+      const [classesData, exercisesData, submissionsData, announcementsData, skillsData] = await Promise.all([
         teacherApi.getClasses(),
         teacherApi.getExercises(),
         teacherApi.getSubmissions(),
         teacherApi.getAnnouncements(),
+        teacherApi.getSkills(),
       ]);
       setClasses(classesData);
       setExercises(exercisesData);
       setSubmissions(submissionsData);
       setAnnouncements(announcementsData);
+      setSkills(skillsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -148,6 +167,11 @@ export default function TeacherDashboard() {
       if (uploadDueDate) {
         formData.append('due_date', uploadDueDate);
       }
+      
+      // Append skills
+      selectedSkills.forEach(skillId => {
+        formData.append('skills', skillId.toString());
+      });
 
       await teacherApi.createExercise(formData);
       
@@ -157,6 +181,7 @@ export default function TeacherDashboard() {
       setUploadClassId('');
       setUploadFile(null);
       setUploadDueDate('');
+      setSelectedSkills([]);
       setShowUploadForm(false);
       loadData();
     } catch (error) {
@@ -306,86 +331,7 @@ export default function TeacherDashboard() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={showChat ? { display: 'none' } : {}}>
-        <div className="mb-6">
-          <Button onClick={() => setShowUploadForm(!showUploadForm)}>
-            <Upload className="h-4 w-4 mr-2" />
-            {showUploadForm ? 'Cancel Upload' : 'Upload New Exercise'}
-          </Button>
-        </div>
-
-        {showUploadForm && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Upload New Exercise</CardTitle>
-              <CardDescription>Upload an exercise file for your students</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleFileUpload} className="space-y-4">
-                <div>
-                  <Label htmlFor="title">Exercise Title</Label>
-                  <Input
-                    id="title"
-                    value={uploadTitle}
-                    onChange={(e) => setUploadTitle(e.target.value)}
-                    placeholder="e.g., Math Homework Chapter 5"
-                    required
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Input
-                    id="description"
-                    value={uploadDescription}
-                    onChange={(e) => setUploadDescription(e.target.value)}
-                    placeholder="Exercise description"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="dueDate">Due Date (Optional)</Label>
-                  <Input
-                    id="dueDate"
-                    type="date"
-                    value={uploadDueDate}
-                    onChange={(e) => setUploadDueDate(e.target.value)}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="class">Select Class</Label>
-                  <select
-                    id="class"
-                    value={uploadClassId}
-                    onChange={(e) => setUploadClassId(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                    required
-                  >
-                    <option value="">Select a class</option>
-                    {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name} ({cls.student_count} students)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="file">Upload File</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
-                    required
-                  />
-                </div>
-                <Button type="submit" disabled={isUploading}>
-                  {isUploading ? 'Uploading...' : 'Upload Exercise'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Announcements</CardTitle>
@@ -446,98 +392,54 @@ export default function TeacherDashboard() {
           </Card>
         </div>
 
-        <div className="mb-6">
-          <Button onClick={() => setShowAnnouncementForm(!showAnnouncementForm)}>
-            <Megaphone className="h-4 w-4 mr-2" />
-            {showAnnouncementForm ? 'Cancel' : 'Create Announcement'}
-          </Button>
+        <div className="border-b mb-6">
+          <nav className="-mb-px flex space-x-4" role="tablist">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
         </div>
 
-        {showAnnouncementForm && (
-          <Card className="mb-6">
+        {activeTab === 'my-classes' && (
+          <Card>
             <CardHeader>
-              <CardTitle>Create Announcement</CardTitle>
-              <CardDescription>Post an announcement for your students and their parents</CardDescription>
+              <CardTitle>My Classes</CardTitle>
+              <CardDescription>Classes you teach</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="announcementTitle">Title</Label>
-                  <Input
-                    id="announcementTitle"
-                    value={announcementTitle}
-                    onChange={(e) => setAnnouncementTitle(e.target.value)}
-                    placeholder="Announcement title"
-                  />
+              {classes.length === 0 ? (
+                <p className="text-muted-foreground">No classes assigned yet</p>
+              ) : (
+                <div className="space-y-4">
+                  {classes.map((cls) => (
+                    <div key={cls.id} className="p-4 border rounded-lg">
+                      <h3 className="font-medium">{cls.name}</h3>
+                      <p className="text-sm text-muted-foreground">{cls.description}</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {cls.student_count} students enrolled
+                      </p>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <Label htmlFor="announcementContent">Content</Label>
-                  <textarea
-                    id="announcementContent"
-                    value={announcementContent}
-                    onChange={(e) => setAnnouncementContent(e.target.value)}
-                    placeholder="Write your announcement here..."
-                    className="w-full p-2 border rounded-md min-h-[100px]"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="announcementClass">Class (Optional)</Label>
-                  <select
-                    id="announcementClass"
-                    value={announcementClassId}
-                    onChange={(e) => setAnnouncementClassId(e.target.value)}
-                    className="w-full p-2 border rounded-md"
-                  >
-                    <option value="">All my classes</option>
-                    {classes.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <Button onClick={handleCreateAnnouncement} disabled={isPosting}>
-                  {isPosting ? 'Posting...' : 'Post Announcement'}
-                </Button>
-              </div>
+              )}
             </CardContent>
           </Card>
         )}
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>My Announcements</CardTitle>
-            <CardDescription>Announcements you've posted</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {announcements.length === 0 ? (
-              <p className="text-muted-foreground">No announcements yet</p>
-            ) : (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                {announcements.map((ann) => (
-                  <div key={ann.id} className="p-4 border rounded-lg">
-                    <h3 className="font-medium">{ann.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">{ann.content}</p>
-                    <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                      {ann.class_name && <span>Class: {ann.class_name}</span>}
-                      <span>{new Date(ann.created_at).toLocaleString()}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="mb-6">
-          <Button onClick={() => setShowAttendanceForm(!showAttendanceForm)}>
-            <UserCheck className="h-4 w-4 mr-2" />
-            {showAttendanceForm ? 'Cancel' : 'Mark Attendance'}
-          </Button>
-        </div>
-
-        {showAttendanceForm && (
-          <Card className="mb-6">
+        {activeTab === 'mark-attendance' && (
+          <Card>
             <CardHeader>
               <CardTitle>Mark Attendance</CardTitle>
               <CardDescription>Mark students as present or absent for today</CardDescription>
@@ -642,57 +544,70 @@ export default function TeacherDashboard() {
           </Card>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {activeTab === 'create-announcement' && (
           <Card>
             <CardHeader>
-              <CardTitle>My Classes</CardTitle>
-              <CardDescription>Classes you teach</CardDescription>
+              <CardTitle>Create Announcement</CardTitle>
+              <CardDescription>Post an announcement for your students and their parents</CardDescription>
             </CardHeader>
             <CardContent>
-              {classes.length === 0 ? (
-                <p className="text-muted-foreground">No classes assigned yet</p>
-              ) : (
-                <div className="space-y-4">
-                  {classes.map((cls) => (
-                    <div key={cls.id} className="p-4 border rounded-lg">
-                      <h3 className="font-medium">{cls.name}</h3>
-                      <p className="text-sm text-muted-foreground">{cls.description}</p>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {cls.student_count} students enrolled
-                      </p>
-                    </div>
-                  ))}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="announcementTitle">Title</Label>
+                  <Input
+                    id="announcementTitle"
+                    value={announcementTitle}
+                    onChange={(e) => setAnnouncementTitle(e.target.value)}
+                    placeholder="Announcement title"
+                  />
                 </div>
-              )}
+                <div>
+                  <Label htmlFor="announcementContent">Content</Label>
+                  <textarea
+                    id="announcementContent"
+                    value={announcementContent}
+                    onChange={(e) => setAnnouncementContent(e.target.value)}
+                    placeholder="Write your announcement here..."
+                    className="w-full p-2 border rounded-md min-h-[100px]"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="announcementClass">Class (Optional)</Label>
+                  <select
+                    id="announcementClass"
+                    value={announcementClassId}
+                    onChange={(e) => setAnnouncementClassId(e.target.value)}
+                    className="w-full p-2 border rounded-md"
+                  >
+                    <option value="">All my classes</option>
+                    {classes.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button onClick={handleCreateAnnouncement} disabled={isPosting}>
+                  {isPosting ? 'Posting...' : 'Post Announcement'}
+                </Button>
+              </div>
             </CardContent>
-          </Card>
-
-          <Card>
             <CardHeader>
-              <CardTitle>Uploaded Exercises</CardTitle>
-              <CardDescription>Files you've shared with students</CardDescription>
+              <CardTitle>My Announcements</CardTitle>
+              <CardDescription>Announcements you've posted</CardDescription>
             </CardHeader>
             <CardContent>
-              {exercises.length === 0 ? (
-                <p className="text-muted-foreground">No exercises uploaded yet</p>
+              {announcements.length === 0 ? (
+                <p className="text-muted-foreground">No announcements yet</p>
               ) : (
-                <div className="space-y-4">
-                  {exercises.map((exercise) => (
-                    <div key={exercise.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">{exercise.title}</h3>
-                          <p className="text-sm text-muted-foreground">{exercise.description}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Class: {exercise.class_name}
-                            {exercise.due_date && ` | Due: ${new Date(exercise.due_date).toLocaleDateString()}`}
-                          </p>
-                        </div>
-                        {exercise.file_url && (
-                          <Button variant="outline" size="sm" onClick={() => window.open(exercise.file_url!, '_blank')}>
-                            View File
-                          </Button>
-                        )}
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  {announcements.map((ann) => (
+                    <div key={ann.id} className="p-4 border rounded-lg">
+                      <h3 className="font-medium">{ann.title}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{ann.content}</p>
+                      <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                        {ann.class_name && <span>Class: {ann.class_name}</span>}
+                        <span>{new Date(ann.created_at).toLocaleString()}</span>
                       </div>
                     </div>
                   ))}
@@ -700,7 +615,159 @@ export default function TeacherDashboard() {
               )}
             </CardContent>
           </Card>
+        )}
 
+        {activeTab === 'upload-exercise' && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Upload New Exercise</CardTitle>
+                <CardDescription>Upload an exercise file for your students</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleFileUpload} className="space-y-4">
+                  <div>
+                    <Label htmlFor="title">Exercise Title</Label>
+                    <Input
+                      id="title"
+                      value={uploadTitle}
+                      onChange={(e) => setUploadTitle(e.target.value)}
+                      placeholder="e.g., Math Homework Chapter 5"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="description">Description</Label>
+                    <Input
+                      id="description"
+                      value={uploadDescription}
+                      onChange={(e) => setUploadDescription(e.target.value)}
+                      placeholder="Exercise description"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="dueDate">Due Date (Optional)</Label>
+                    <Input
+                      id="dueDate"
+                      type="date"
+                      value={uploadDueDate}
+                      onChange={(e) => setUploadDueDate(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="w-full"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="class">Select Class</Label>
+                    <select
+                      id="class"
+                      value={uploadClassId}
+                      onChange={(e) => setUploadClassId(e.target.value)}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    >
+                      <option value="">Select a class</option>
+                      {classes.map((cls) => (
+                        <option key={cls.id} value={cls.id}>
+                          {cls.name} ({cls.student_count} students)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="skills">Skills (Optional)</Label>
+                    <div className="border rounded-md p-2 max-h-40 overflow-y-auto">
+                      {skills.length === 0 ? (
+                        <p className="text-sm text-gray-500">No skills available</p>
+                      ) : (
+                        <div className="space-y-1">
+                          {skills.map((skill) => (
+                            <label key={skill.id} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedSkills.includes(skill.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedSkills([...selectedSkills, skill.id]);
+                                  } else {
+                                    setSelectedSkills(selectedSkills.filter(id => id !== skill.id));
+                                  }
+                                }}
+                                className="rounded"
+                              />
+                              <span className="text-sm">{skill.name}</span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="file">Upload File</Label>
+                    <Input
+                      id="file"
+                      type="file"
+                      onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                      required
+                    />
+                  </div>
+                  <Button type="submit" disabled={isUploading}>
+                    {isUploading ? 'Uploading...' : 'Upload Exercise'}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Uploaded Exercises</CardTitle>
+                <CardDescription>Files you've shared with students</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {exercises.length === 0 ? (
+                  <p className="text-muted-foreground">No exercises uploaded yet</p>
+                ) : (
+                  <div className="space-y-4">
+                    {exercises.map((exercise) => (
+                      <div key={exercise.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h3 className="font-medium">{exercise.title}</h3>
+                            <p className="text-sm text-muted-foreground">{exercise.description}</p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Class: {exercise.class_name}
+                              {exercise.due_date && ` | Due: ${new Date(exercise.due_date).toLocaleDateString()}`}
+                            </p>
+                            {exercise.skills && Array.isArray(exercise.skills) && exercise.skills.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {exercise.skills.map((skillItem: any) => {
+                                  const skillId = typeof skillItem === 'object' ? skillItem.id : skillItem;
+                                  const skillName = typeof skillItem === 'object' ? skillItem.name : (skills.find(s => s.id === skillId)?.name || `Skill ${skillId}`);
+                                  return (
+                                    <span key={skillId} className="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                      {skillName}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          {exercise.file_url && (
+                            <Button variant="outline" size="sm" onClick={() => window.open(studentApi.downloadExercise(exercise.id), '_blank')}>
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {activeTab === 'student-submissions' && (
           <Card>
             <CardHeader>
               <CardTitle>Student Submissions</CardTitle>
@@ -730,24 +797,26 @@ export default function TeacherDashboard() {
                             </p>
                           )}
                         </div>
-                        {submission.submission_file_url && (
+                        <div className="flex gap-2">
+                          {submission.submission_file_url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(teacherApi.downloadSubmission(submission.id), '_blank')}
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          )}
                           <Button
-                            variant="outline"
+                            variant="default"
                             size="sm"
-                            onClick={() => window.open(teacherApi.downloadSubmission(submission.id), '_blank')}
+                            onClick={() => openGradingDialog(submission)}
                           >
-                            <Download className="h-4 w-4 mr-2" />
-                            Download
+                            <Star className="h-4 w-4 mr-2" />
+                            Grade
                           </Button>
-                        )}
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={() => openGradingDialog(submission)}
-                        >
-                          <Star className="h-4 w-4 mr-2" />
-                          Grade
-                        </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -755,7 +824,7 @@ export default function TeacherDashboard() {
               )}
             </CardContent>
           </Card>
-        </div>
+        )}
 
         {/* Grading Dialog */}
         {gradingSubmission && (

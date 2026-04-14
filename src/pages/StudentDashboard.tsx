@@ -18,6 +18,11 @@ interface Class {
   student_count: number;
 }
 
+interface Skill {
+  id: number;
+  name: string;
+}
+
 interface Exercise {
   id: number;
   title: string;
@@ -26,6 +31,7 @@ interface Exercise {
   teacher_name: string;
   class_name: string;
   due_date: string | null;
+  skills: Skill[];
 }
 
 interface Submission {
@@ -59,14 +65,23 @@ interface AttendanceRecord {
   marked_at: string;
 }
 
+const TABS = [
+  { id: 'class-enrollment', label: 'Class Enrollment' },
+  { id: 'announcements', label: 'Announcements' },
+  { id: 'available-exercises', label: 'Available Exercises' },
+  { id: 'my-attendance', label: 'My Attendance' },
+] as const;
+
 export default function StudentDashboard() {
   const { logout, user } = useAuth();
   const { unreadCount, refresh: refreshNotifications } = useNotificationWebSocket();
+  const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('class-enrollment');
   const [classes, setClasses] = useState<Class[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState<number | null>(null);
@@ -80,18 +95,20 @@ export default function StudentDashboard() {
 
   const loadData = async () => {
     try {
-      const [classesData, exercisesData, submissionsData, announcementsData, attendanceData] = await Promise.all([
+      const [classesData, exercisesData, submissionsData, announcementsData, attendanceData, skillsData] = await Promise.all([
         studentApi.getAllClasses(),
         studentApi.getExercises(),
         studentApi.getSubmissions(),
         studentApi.getAnnouncements(),
         studentApi.getAttendance(),
+        studentApi.getSkills(),
       ]);
       setClasses(classesData);
       setExercises(exercisesData);
       setSubmissions(submissionsData);
       setAnnouncements(announcementsData);
       setAttendance(attendanceData);
+      setSkills(skillsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -139,6 +156,24 @@ export default function StudentDashboard() {
         console.log('Error response status:', axiosError.response.status);
       }
       alert('Failed to submit exercise');
+    } finally {
+      setSubmitting(null);
+    }
+  };
+  
+  const handleMarkAsDone = async (exerciseId: number) => {
+    setSubmitting(exerciseId);
+    try {
+      const formData = new FormData();
+      formData.append('exercise', exerciseId.toString());
+      
+      await studentApi.submitExercise(formData);
+      
+      setSelectedExercise(null);
+      loadData();
+    } catch (error) {
+      console.error('Error marking as done:', error);
+      alert('Failed to mark as done');
     } finally {
       setSubmitting(null);
     }
@@ -212,7 +247,7 @@ export default function StudentDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {classes.filter((cls) => cls.students.includes(user?.id || 0)).length}
+                {classes.filter((cls) => cls.students.some(s => s.id === user?.id)).length}
               </div>
               <p className="text-xs text-muted-foreground">Enrolled in</p>
             </CardContent>
@@ -241,262 +276,313 @@ export default function StudentDashboard() {
           </Card>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Announcements</CardTitle>
-            <CardDescription>Announcements from your teachers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {announcements.length === 0 ? (
-              <p className="text-muted-foreground">No announcements yet</p>
-            ) : (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                {Object.entries(
-                  announcements.reduce((acc, ann) => {
-                    const key = ann.teacher_name;
-                    if (!acc[key]) acc[key] = [];
-                    acc[key].push(ann);
-                    return acc;
-                  }, {} as { [key: string]: Announcement[] })
-                ).map(([teacherName, anns]) => (
-                  <div key={teacherName} className="border rounded-lg p-4">
-                    <h4 className="font-semibold text-lg mb-3">From: {teacherName}</h4>
-                    <div className="space-y-3">
-                      {anns.map((ann) => (
-                        <div key={ann.id} className="p-3 bg-gray-50 rounded">
-                          <h5 className="font-medium">{ann.title}</h5>
-                          <p className="text-sm text-muted-foreground mt-1">{ann.content}</p>
-                          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
-                            {ann.class_name && <span>Class: {ann.class_name}</span>}
-                            <span>{new Date(ann.created_at).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        <div className="border-b mb-6">
+          <nav className="-mb-px flex space-x-4" role="tablist">
+            {TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>My Attendance</CardTitle>
-            <CardDescription>Your attendance record</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {attendance.length === 0 ? (
-              <p className="text-muted-foreground">No attendance records yet</p>
-            ) : (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="p-3 bg-green-50 rounded">
-                    <p className="text-2xl font-bold text-green-600">
-                      {attendance.filter(r => r.status === 'PRESENT').length}
-                    </p>
-                    <p className="text-sm text-green-600">Present</p>
-                  </div>
-                  <div className="p-3 bg-red-50 rounded">
-                    <p className="text-2xl font-bold text-red-600">
-                      {attendance.filter(r => r.status === 'ABSENT').length}
-                    </p>
-                    <p className="text-sm text-red-600">Absent</p>
-                  </div>
-                </div>
-                {attendance.map((record) => (
-                  <div key={record.id} className="flex items-center justify-between p-3 border rounded">
-                    <div>
-                      <p className="font-medium">{record.class_name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {new Date(record.date).toLocaleDateString()} - Teacher: {record.teacher_name}
-                      </p>
-                    </div>
-                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
-                      record.status === 'PRESENT' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-red-100 text-red-800'
-                    }`}>
-                      {record.status === 'PRESENT' ? (
-                        <UserCheck className="h-4 w-4" />
-                      ) : (
-                        <UserX className="h-4 w-4" />
-                      )}
-                      <span className="text-sm font-medium">{record.status}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Available Classes</CardTitle>
-            <CardDescription>Browse and enroll in classes to access exercises</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {classes.length === 0 ? (
-              <p className="text-muted-foreground">No classes available yet</p>
-            ) : (
-              <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                {classes.map((cls) => {
-                  const enrolled = isEnrolled(cls.id);
-                  return (
-                    <div key={cls.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg">{cls.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {cls.description || 'No description provided'}
-                          </p>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            <strong>Teacher:</strong> {cls.teacher_name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {cls.student_count} students enrolled
-                          </p>
-                          {enrolled && (
-                            <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full mt-2">
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                              Enrolled
-                            </span>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          {enrolled ? (
-                            <Button disabled size="sm">
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Enrolled
-                            </Button>
-                          ) : (
-                            <Button
-                              onClick={() => handleEnroll(cls.id)}
-                              disabled={enrolling === cls.id}
-                              size="sm"
-                            >
-                              {enrolling === cls.id ? (
-                                'Enrolling...'
-                              ) : (
-                                <>
-                                  <UserPlus className="h-4 w-4 mr-2" />
-                                  Enroll
-                                </>
-                              )}
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Available Exercises</CardTitle>
-            <CardDescription>Download and view exercises from your enrolled classes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {exercises.length === 0 ? (
-              <p className="text-muted-foreground">
-                No exercises available yet. Enroll in classes to see exercises.
-              </p>
-            ) : (
-              <div className="space-y-4 max-h-[500px] overflow-y-auto">
-                {exercises.map((exercise) => {
-                  const submitted = isSubmitted(exercise.id);
-                  const submission = getSubmission(exercise.id);
-                  const isDue = exercise.due_date && new Date(exercise.due_date) < new Date();
-
-                  return (
-                    <div key={exercise.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold">{exercise.title}</h3>
-                            {submitted && (
-                              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                Submitted
-                              </span>
-                            )}
-                            {isDue && !submitted && (
-                              <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
-                                Overdue
+        {activeTab === 'class-enrollment' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Classes</CardTitle>
+              <CardDescription>Browse and enroll in classes to access exercises</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {classes.length === 0 ? (
+                <p className="text-muted-foreground">No classes available yet</p>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  {classes.map((cls) => {
+                    const enrolled = isEnrolled(cls.id);
+                    return (
+                      <div key={cls.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-lg">{cls.name}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {cls.description || 'No description provided'}
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              <strong>Teacher:</strong> {cls.teacher_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {cls.student_count} students enrolled
+                            </p>
+                            {enrolled && (
+                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full mt-2">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Enrolled
                               </span>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {exercise.description || 'No description provided'}
-                          </p>
-                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                            <span>Class: {exercise.class_name}</span>
-                            <span>Teacher: {exercise.teacher_name}</span>
-                            {exercise.due_date && (
-                              <span>
-                                Due: {new Date(exercise.due_date).toLocaleDateString()}
-                              </span>
-                            )}
-                          </div>
-                          {submission && submission.grade !== null && (
-                            <div className="mt-2 p-2 bg-blue-50 rounded">
-                              <p className="text-sm">
-                                <strong>Grade:</strong> {submission.grade}/20
-                                {submission.feedback && (
+                          <div className="ml-4">
+                            {enrolled ? (
+                              <Button disabled size="sm">
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Enrolled
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={() => handleEnroll(cls.id)}
+                                disabled={enrolling === cls.id}
+                                size="sm"
+                              >
+                                {enrolling === cls.id ? (
+                                  'Enrolling...'
+                                ) : (
                                   <>
-                                    <br />
-                                    <strong>Feedback:</strong> {submission.feedback}
+                                    <UserPlus className="h-4 w-4 mr-2" />
+                                    Enroll
                                   </>
                                 )}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          {exercise.file_url && (
-                            <Button
-                              onClick={() => handleDownload(exercise.id)}
-                              size="sm"
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </Button>
-                          )}
-                          
-                          {!submitted && !isDue && (
-                            <Button
-                              onClick={() => openSubmitDialog(exercise.id)}
-                              size="sm"
-                              variant="outline"
-                            >
-                              Submit Solution
-                            </Button>
-                          )}
-                          
-                          {!submitted && isDue && (
-                            <Button
-                              disabled
-                              size="sm"
-                              variant="outline"
-                              title="Due date has passed"
-                            >
-                              Due Date Passed
-                            </Button>
-                          )}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'announcements' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Announcements</CardTitle>
+              <CardDescription>Announcements from your teachers</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {announcements.length === 0 ? (
+                <p className="text-muted-foreground">No announcements yet</p>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  {Object.entries(
+                    announcements.reduce((acc, ann) => {
+                      const key = ann.teacher_name;
+                      if (!acc[key]) acc[key] = [];
+                      acc[key].push(ann);
+                      return acc;
+                    }, {} as { [key: string]: Announcement[] })
+                  ).map(([teacherName, anns]) => (
+                    <div key={teacherName} className="border rounded-lg p-4">
+                      <h4 className="font-semibold text-lg mb-3">From: {teacherName}</h4>
+                      <div className="space-y-3">
+                        {anns.map((ann) => (
+                          <div key={ann.id} className="p-3 bg-gray-50 rounded">
+                            <h5 className="font-medium">{ann.title}</h5>
+                            <p className="text-sm text-muted-foreground mt-1">{ann.content}</p>
+                            <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                              {ann.class_name && <span>Class: {ann.class_name}</span>}
+                              <span>{new Date(ann.created_at).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'available-exercises' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Available Exercises</CardTitle>
+              <CardDescription>Download and view exercises from your enrolled classes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {exercises.length === 0 ? (
+                <p className="text-muted-foreground">
+                  No exercises available yet. Enroll in classes to see exercises.
+                </p>
+              ) : (
+                <div className="space-y-4 max-h-[500px] overflow-y-auto">
+                  {exercises.map((exercise) => {
+                    const submitted = isSubmitted(exercise.id);
+                    const submission = getSubmission(exercise.id);
+                    const isDue = exercise.due_date && new Date(exercise.due_date) < new Date();
+
+                    return (
+                      <div key={exercise.id} className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold">{exercise.title}</h3>
+                              {submitted && (
+                                <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center gap-1">
+                                  <CheckCircle className="h-3 w-3" />
+                                  Submitted
+                                </span>
+                              )}
+                              {isDue && !submitted && (
+                                <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                                  Overdue
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {exercise.description || 'No description provided'}
+                            </p>
+                            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                              <span>Class: {exercise.class_name}</span>
+                              <span>Teacher: {exercise.teacher_name}</span>
+                              {exercise.due_date && (
+                                <span>
+                                  Due: {new Date(exercise.due_date).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                            {exercise.skills && Array.isArray(exercise.skills) && exercise.skills.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {exercise.skills.map((skillItem: any) => {
+                                  const skillId = typeof skillItem === 'object' ? skillItem.id : skillItem;
+                                  const skillName = typeof skillItem === 'object' ? skillItem.name : (skills.find(s => s.id === skillId)?.name || `Skill ${skillId}`);
+                                  return (
+                                    <span key={skillId} className="px-2 py-0.5 bg-purple-100 text-purple-800 text-xs rounded-full">
+                                      {skillName}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            {submission && submission.grade !== null && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded">
+                                <p className="text-sm">
+                                  <strong>Grade:</strong> {submission.grade}/20
+                                  {submission.feedback && (
+                                    <>
+                                      <br />
+                                      <strong>Feedback:</strong> {submission.feedback}
+                                    </>
+                                  )}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            {exercise.file_url && (
+                              <Button
+                                onClick={() => handleDownload(exercise.id)}
+                                size="sm"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            )}
+                            
+                            {!submitted && !isDue && (
+                              <Button
+                                onClick={() => openSubmitDialog(exercise.id)}
+                                size="sm"
+                                variant="outline"
+                              >
+                                Submit Solution
+                              </Button>
+                            )}
+                            
+                            {!submitted && !isDue && (
+                              <Button
+                                onClick={() => handleMarkAsDone(exercise.id)}
+                                size="sm"
+                                disabled={submitting === exercise.id}
+                              >
+                                {submitting === exercise.id ? '...' : 'Mark as Done'}
+                              </Button>
+                            )}
+                            
+                            {!submitted && isDue && (
+                              <Button
+                                disabled
+                                size="sm"
+                                variant="outline"
+                                title="Due date has passed"
+                              >
+                                Due Date Passed
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'my-attendance' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>My Attendance</CardTitle>
+              <CardDescription>Your attendance record</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {attendance.length === 0 ? (
+                <p className="text-muted-foreground">No attendance records yet</p>
+              ) : (
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="p-3 bg-green-50 rounded">
+                      <p className="text-2xl font-bold text-green-600">
+                        {attendance.filter(r => r.status === 'PRESENT').length}
+                      </p>
+                      <p className="text-sm text-green-600">Present</p>
+                    </div>
+                    <div className="p-3 bg-red-50 rounded">
+                      <p className="text-2xl font-bold text-red-600">
+                        {attendance.filter(r => r.status === 'ABSENT').length}
+                      </p>
+                      <p className="text-sm text-red-600">Absent</p>
+                    </div>
+                  </div>
+                  {attendance.map((record) => (
+                    <div key={record.id} className="flex items-center justify-between p-3 border rounded">
+                      <div>
+                        <p className="font-medium">{record.class_name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {new Date(record.date).toLocaleDateString()} - Teacher: {record.teacher_name}
+                        </p>
+                      </div>
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
+                        record.status === 'PRESENT' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {record.status === 'PRESENT' ? (
+                          <UserCheck className="h-4 w-4" />
+                        ) : (
+                          <UserX className="h-4 w-4" />
+                        )}
+                        <span className="text-sm font-medium">{record.status}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {selectedExercise && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">

@@ -109,6 +109,12 @@ export const teacherApi = {
     return response.data;
   },
   
+  // Get all skills
+  getSkills: async () => {
+    const response = await apiClient.get('/users/skills/');
+    return response.data;
+  },
+  
   // Download submission file
   downloadSubmission: (submissionId: number) => {
     return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
@@ -211,6 +217,12 @@ export const studentApi = {
   // Get student's attendance
   getAttendance: async () => {
     const response = await apiClient.get('/users/student/attendance/');
+    return response.data;
+  },
+  
+  // Get all skills
+  getSkills: async () => {
+    const response = await apiClient.get('/users/skills/');
     return response.data;
   },
 };
