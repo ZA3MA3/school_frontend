@@ -246,6 +246,12 @@ export const parentApi = {
     const response = await apiClient.get('/users/parent/attendance/');
     return response.data;
   },
+  
+  // Predict student dropout/graduation
+  predictStudent: async (studentId: number) => {
+    const response = await apiClient.get(`/users/predict/student/${studentId}/`);
+    return response.data;
+  },
 };
 
 // Chat API functions

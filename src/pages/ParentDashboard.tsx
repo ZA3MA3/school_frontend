@@ -53,7 +53,26 @@ const TABS = [
   { id: 'my-children', label: 'My Children' },
   { id: 'announcements', label: 'Announcements' },
   { id: 'attendance-records', label: 'Attendance Records' },
+  { id: 'predictions', label: 'Predictions' },
 ] as const;
+
+interface PredictionResult {
+  student_id: number;
+  student_name: string;
+  prediction: string;
+  confidence: number;
+  features_used: {
+    gender: number;
+    age_at_enrollment: number;
+    scholarship_holder: number;
+    total_absences: number;
+    absence_rate: number;
+    exercises_completed: number;
+    exercise_completion_rate: number;
+    critical_skill_completion_rate: number;
+    total_critical_skills_missed: number;
+  };
+}
 
 export default function ParentDashboard() {
   const { logout, user } = useAuth();
@@ -67,6 +86,28 @@ export default function ParentDashboard() {
   const [showChat, setShowChat] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  const [predictions, setPredictions] = useState<{ [studentId: number]: PredictionResult }>({});
+  const [predicting, setPredicting] = useState<number | null>(null);
+
+  const handlePredict = async (studentId: number) => {
+    setPredicting(studentId);
+    try {
+      console.log('Calling prediction API for student:', studentId);
+      const result = await parentApi.predictStudent(studentId);
+      console.log('Prediction result:', result);
+      setPredictions(prev => ({ ...prev, [studentId]: result }));
+    } catch (error: any) {
+      console.error('Error predicting:', error);
+      console.error('Error response:', error.response);
+      console.error('Error message:', error.message);
+      if (error.response?.data) {
+        console.error('Server error data:', error.response.data);
+      }
+      alert('Failed to get prediction: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setPredicting(null);
+    }
+  };
 
   const childAnnouncements = announcements.filter(ann => selectedChildForAnnouncements === '' || ann.child_name === selectedChildForAnnouncements);
   const childAttendance = attendance.filter(att => selectedChildForAttendance === '' || att.child_name === selectedChildForAttendance);
@@ -525,6 +566,96 @@ export default function ParentDashboard() {
                       ))
                     )}
                   </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'predictions' && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>Predictions</CardTitle>
+              <CardDescription>Predict student dropout/graduation outcomes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {children.length === 0 ? (
+                <p className="text-muted-foreground">No children linked to your account yet</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {children.map((child) => {
+                    const prediction = predictions[child.id];
+                    return (
+                      <div key={child.id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <p className="font-medium text-lg">{child.full_name}</p>
+                          </div>
+                          {!prediction && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePredict(child.id)}
+                              disabled={predicting === child.id}
+                            >
+                              {predicting === child.id ? 'Predicting...' : 'Predict'}
+                            </Button>
+                          )}
+                        </div>
+                        
+                        {prediction && (
+                          <div className="space-y-4">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+                              <div>
+                                <p className="text-sm text-muted-foreground">Prediction</p>
+                                <p className={`text-xl font-bold ${
+                                  prediction.prediction === 'Dropout' ? 'text-red-600' : 'text-green-600'
+                                }`}>
+                                  {prediction.prediction}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm text-muted-foreground">Confidence</p>
+                                <p className="text-xl font-bold">
+                                  {(prediction.confidence * 100).toFixed(1)}%
+                                </p>
+                              </div>
+                            </div>
+                            
+                            <div className="border-t pt-4">
+                              <p className="text-sm font-medium mb-3">Features Used</p>
+                              <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Total Absences</span>
+                                  <span className="font-medium">{prediction.features_used.total_absences}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Absence Rate</span>
+                                  <span className="font-medium">{(prediction.features_used.absence_rate * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Exercises Completed</span>
+                                  <span className="font-medium">{prediction.features_used.exercises_completed}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Exercise Completion</span>
+                                  <span className="font-medium">{(prediction.features_used.exercise_completion_rate * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Critical Skill Completion</span>
+                                  <span className="font-medium">{(prediction.features_used.critical_skill_completion_rate * 100).toFixed(1)}%</span>
+                                </div>
+                                <div className="flex justify-between">
+                                  <span className="text-muted-foreground">Critical Skills Missed</span>
+                                  <span className="font-medium">{prediction.features_used.total_critical_skills_missed}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
