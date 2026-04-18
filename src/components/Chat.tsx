@@ -249,7 +249,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
 
   return (
     <div className="flex h-full">
-      <div className="w-64 border-r bg-gray-50 flex flex-col">
+      <div className="w-64 border-r border-t bg-gray-50 flex flex-col">
         <div className="p-4 border-b bg-white flex justify-between items-center">
           <h2 className="font-semibold">{t('chat.messages')}</h2>
           {onClose && (
@@ -304,7 +304,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
                   <p className="font-semibold">{selectedContact.full_name}</p>
                   <p className="text-xs text-muted-foreground">
                     {selectedContact.role}
-                  {/*  {wsConnected ? ' • Connected' : ' • Connecting...'} */}
+                 
                   {` • ${wsConnected ? t('chat.connected') : t('chat.connecting')}`}
                   </p>
                 </div>
@@ -365,7 +365,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 border-t flex items-center justify-center">
             <div className="text-center">
               <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
               <p className="text-muted-foreground">{t('chat.selectContact')}</p>
