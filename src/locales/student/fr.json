@@ -1,0 +1,45 @@
+{
+  "dashboard": {
+    "studentDashboard": "صفحة التلاميذ",
+    "welcome": "مرحبا بك",
+    "logout": "تسجيل الخروج"
+  },
+  "tabs": {
+    "classes": "موادي",
+    "exercises": "تمارين",
+    "submissions": "تسليماتي",
+    "announcements": "اعلانات",
+    "attendance": "حضور"
+  },
+  "classes": {
+    "noClasses": "لا توجد مواد",
+    "enroll": "تسجيل",
+    "enrolled": "مسجل",
+    "notEnrolled": "غير مسجل"
+  },
+  "exercises": {
+    "noExercises": "لا يوجد تمارين",
+    "dueDate": "اخر اجل",
+    "submit": "ارسال",
+    "submitExercise": "ارسال التمرين"
+  },
+  "submissions": {
+    "noSubmissions": "لا توجد مشاركات",
+    "submitted": "ارسال",
+    "grade": "نقطة",
+    "feedback": "ملاحظة"
+  },
+  "announcements": {
+    "noAnnouncements": "لا توجد إعلانات"
+  },
+  "attendance": {
+    "noRecords": "لا توجد سجلات حضور",
+    "present": "حاضر",
+    "absent": "غائب"
+  },
+  "common": {
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "retry": "إعادة المحاولة"
+  }
+}

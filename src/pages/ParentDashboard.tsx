@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 import { parentApi, chatApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
@@ -50,10 +54,10 @@ interface AttendanceData {
 }
 
 const TABS = [
-  { id: 'my-children', label: 'My Children' },
-  { id: 'announcements', label: 'Announcements' },
-  { id: 'attendance-records', label: 'Attendance Records' },
-  { id: 'predictions', label: 'Predictions' },
+  { id: 'my-children', labelKey: 'tabs.myChildren' },
+  { id: 'announcements', labelKey: 'tabs.announcements' },
+  { id: 'attendance-records', labelKey: 'tabs.attendanceRecords' },
+  { id: 'predictions', labelKey: 'tabs.predictions' },
 ] as const;
 
 interface PredictionResult {
@@ -75,6 +79,7 @@ interface PredictionResult {
 }
 
 export default function ParentDashboard() {
+  const { t, i18n } = useTranslation();
   const { logout, user } = useAuth();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-children');
   const [selectedChildForAnnouncements, setSelectedChildForAnnouncements] = useState<string>('');
@@ -88,6 +93,10 @@ export default function ParentDashboard() {
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [predictions, setPredictions] = useState<{ [studentId: number]: PredictionResult }>({});
   const [predicting, setPredicting] = useState<number | null>(null);
+
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en');
+  };
 
   const handlePredict = async (studentId: number) => {
     setPredicting(studentId);
@@ -152,7 +161,7 @@ export default function ParentDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">Loading...</div>
+        <div className="text-center">{t('common.loading')}</div>
       </div>
     );
   }
@@ -162,8 +171,8 @@ export default function ParentDashboard() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Parent Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome, {user?.fullName || user?.email}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.parentDashboard')}</h1>
+            <p className="text-sm text-gray-600">{t('dashboard.welcome')}, {user?.fullName || user?.email}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowNotifications(true)} className="relative">
@@ -176,17 +185,31 @@ export default function ParentDashboard() {
             </Button>
             <Button variant="outline" onClick={() => setShowChat(!showChat)} className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
-              Chat
+              {t('dashboard.chat')}
               {chatUnreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
                 </span>
               )}
             </Button>
-            <Button variant="outline" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+            <Button variant="outline" onClick={toggleLanguage}>
+              {i18n.language === 'en' ? 'ع' : 'EN'}
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full h-10 w-10 p-0 -translate-y-1">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>{user?.fullName?.charAt(0) || user?.email?.charAt(0) || 'U'}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={logout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {t('dashboard.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -211,7 +234,7 @@ export default function ParentDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">My Children</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statCards.myChildrenC')}</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -222,7 +245,7 @@ export default function ParentDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Average Progress</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statCards.averageP')}</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -235,7 +258,7 @@ export default function ParentDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Enrolled Classes</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statCards.enrolledC')}</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -248,7 +271,7 @@ export default function ParentDashboard() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Notifications</CardTitle>
+              <CardTitle className="text-sm font-medium">{t('statCards.notifications')}</CardTitle>
               <Bell className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -261,35 +284,36 @@ export default function ParentDashboard() {
         </div>
 
         <div className="border-b mt-8">
-          <nav className="-mb-px flex space-x-4" role="tablist">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                role="tab"
-                aria-selected={activeTab === tab.id}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+          <NavigationMenu>
+            <NavigationMenuList>
+              {TABS.map((tab) => (
+                <NavigationMenuItem key={tab.id}>
+                  <NavigationMenuLink
+                    href="#"
+                    active={activeTab === tab.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab(tab.id);
+                    }}
+                  >
+                    {t(tab.labelKey)}
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
         {activeTab === 'my-children' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
             <Card>
               <CardHeader>
-                <CardTitle>My Children</CardTitle>
-                <CardDescription>Overview of your children's information</CardDescription>
+                <CardTitle>{t('tabs.myChildren')}</CardTitle>
+                <CardDescription>{t('children.overviewInfo')}</CardDescription>
               </CardHeader>
               <CardContent>
                 {children.length === 0 ? (
-                  <p className="text-muted-foreground">No children linked to your account yet</p>
+                  <p className="text-muted-foreground">{t('children.noChildren')}</p>
                 ) : (
                   <div className="space-y-4">
                     {children.map((child) => (
@@ -304,31 +328,31 @@ export default function ParentDashboard() {
                             )}
                           </div>
                           <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                            Active
+                            {t('children.active')}
                           </span>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mt-3">
                           {child.phone_number && (
                             <div>
-                              <p className="text-xs text-muted-foreground">Phone</p>
+                              <p className="text-xs text-muted-foreground">{t('children.phone')}</p>
                               <p className="font-medium text-sm">{child.phone_number}</p>
                             </div>
                           )}
                           {child.address && (
                             <div>
-                              <p className="text-xs text-muted-foreground">Address</p>
+                              <p className="text-xs text-muted-foreground">{t('children.address')}</p>
                               <p className="font-medium text-sm">{child.address}</p>
                             </div>
                           )}
                           {child.parent_occupation && (
                             <div>
-                              <p className="text-xs text-muted-foreground">Parent Occupation</p>
+                              <p className="text-xs text-muted-foreground">{t('children.parentOccupation')}</p>
                               <p className="font-medium text-sm">{child.parent_occupation}</p>
                             </div>
                           )}
                           {child.date_of_birth && (
                             <div>
-                              <p className="text-xs text-muted-foreground">Date of Birth</p>
+                              <p className="text-xs text-muted-foreground">{t('children.dateOfBirth')}</p>
                               <p className="font-medium text-sm">
                                 {new Date(child.date_of_birth).toLocaleDateString()}
                               </p>
@@ -400,36 +424,39 @@ export default function ParentDashboard() {
               ) : (
                 <div>
                   <div className="border-b mb-4">
-                    <nav className="-mb-px flex space-x-2 overflow-x-auto" role="tablist">
-                      <button
-                        onClick={() => setSelectedChildForAnnouncements('')}
-                        className={`whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                          selectedChildForAnnouncements === ''
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                        role="tab"
-                      >
-                        All
-                      </button>
-                      {Object.keys(announcements.reduce((acc, ann) => {
-                        if (!acc[ann.child_name]) acc[ann.child_name] = true;
-                        return acc;
-                      }, {} as Record<string, boolean>)).map((childName) => (
-                        <button
-                          key={childName}
-                          onClick={() => setSelectedChildForAnnouncements(childName)}
-                          className={`whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                            selectedChildForAnnouncements === childName
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700'
-                          }`}
-                          role="tab"
-                        >
-                          {childName}
-                        </button>
-                      ))}
-                    </nav>
+                    <NavigationMenu>
+                      <NavigationMenuList>
+                        <NavigationMenuItem>
+                          <NavigationMenuLink
+                            href="#"
+                            active={selectedChildForAnnouncements === ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setSelectedChildForAnnouncements('');
+                            }}
+                          >
+                            All
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                        {Object.keys(announcements.reduce((acc, ann) => {
+                          if (!acc[ann.child_name]) acc[ann.child_name] = true;
+                          return acc;
+                        }, {} as Record<string, boolean>)).map((childName) => (
+                          <NavigationMenuItem key={childName}>
+                            <NavigationMenuLink
+                              href="#"
+                              active={selectedChildForAnnouncements === childName}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setSelectedChildForAnnouncements(childName);
+                              }}
+                            >
+                              {childName}
+                            </NavigationMenuLink>
+                          </NavigationMenuItem>
+                        ))}
+                      </NavigationMenuList>
+                    </NavigationMenu>
                   </div>
                   <div className="space-y-6 max-h-[500px] overflow-y-auto">
                     {childAnnouncements.length === 0 ? (
@@ -491,33 +518,36 @@ export default function ParentDashboard() {
               ) : (
                 <div>
                   <div className="border-b mb-4">
-                    <nav className="-mb-px flex space-x-2 overflow-x-auto" role="tablist">
-                      <button
-                        onClick={() => setSelectedChildForAttendance('')}
-                        className={`whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                          selectedChildForAttendance === ''
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700'
-                        }`}
-                        role="tab"
-                      >
-                        All
-                      </button>
-                      {attendance.map((att) => att.child_name).filter((name, i, arr) => arr.indexOf(name) === i).map((childName) => (
-                        <button
-                          key={childName}
-                          onClick={() => setSelectedChildForAttendance(childName)}
-                          className={`whitespace-nowrap py-2 px-3 border-b-2 font-medium text-sm transition-colors ${
-                            selectedChildForAttendance === childName
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700'
-                          }`}
-                          role="tab"
-                        >
-                          {childName}
-                        </button>
-                      ))}
-                    </nav>
+                    <NavigationMenu>
+                      <NavigationMenuList>
+                        <NavigationMenuItem>
+                          <NavigationMenuLink
+                            href="#"
+                            active={selectedChildForAttendance === ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setSelectedChildForAttendance('');
+                            }}
+                          >
+                            All
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                        {attendance.map((att) => att.child_name).filter((name, i, arr) => arr.indexOf(name) === i).map((childName) => (
+                          <NavigationMenuItem key={childName}>
+                            <NavigationMenuLink
+                              href="#"
+                              active={selectedChildForAttendance === childName}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setSelectedChildForAttendance(childName);
+                              }}
+                            >
+                              {childName}
+                            </NavigationMenuLink>
+                          </NavigationMenuItem>
+                        ))}
+                      </NavigationMenuList>
+                    </NavigationMenu>
                   </div>
                   <div className="space-y-6 max-h-[500px] overflow-y-auto">
                     {childAttendance.length === 0 ? (

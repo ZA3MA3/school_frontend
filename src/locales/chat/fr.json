@@ -1,0 +1,13 @@
+{
+  "title": "المحادثة",
+  "placeholder": "اكتب رسالة...",
+  "send": "إرسال",
+  "noMessages": "لا توجد رسائل",
+  "startConversation": "ابدأ محادثة",
+  "online": "متصل",
+  "offline": "غير متصل",
+  "selectContact": "اختر جهة اتصال للبدء",
+  "connected": "متصل",
+  "connecting": "جاري الاتصال...",
+  "messages":"رسائل"
+}

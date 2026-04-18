@@ -1,0 +1,57 @@
+{
+  "dashboard": {
+    "teacherDashboard": "Teacher Dashboard",
+    "welcome": "Welcome",
+    "logout": "Logout",
+    "chat":"Chat"
+  },
+  "tabs": {
+    "myClasses": "My Classes",
+    "exercises": "Exercises",
+    "announcements": "Announcements",
+    "attendance": "Attendance",
+    "submissions": "Submissions"
+  },
+  "classes": {
+    "noClasses": "No classes assigned yet",
+    "students": "Students",
+    "createClass": "Create Class",
+    "className": "Class Name",
+    "description": "Description"
+  },
+  "exercises": {
+    "noExercises": "No exercises created yet",
+    "createExercise": "Create Exercise",
+    "title": "Title",
+    "file": "File",
+    "dueDate": "Due Date",
+    "skills": "Skills"
+  },
+  "announcements": {
+    "noAnnouncements": "No announcements yet",
+    "createAnnouncement": "Create Announcement",
+    "content": "Content"
+  },
+  "attendance": {
+    "markAttendance": "Mark Attendance",
+    "selectClass": "Select Class",
+    "selectDate": "Select Date",
+    "present": "Present",
+    "absent": "Absent"
+  },
+  "submissions": {
+    "noSubmissions": "No submissions yet",
+    "grade": "Grade",
+    "feedback": "Feedback",
+    "submitGrade": "Submit Grade"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit"
+  }
+}

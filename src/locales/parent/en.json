@@ -1,0 +1,87 @@
+{
+  "dashboard": {
+    "parentDashboard": "Parent Dashboard",
+    "welcome": "Welcome",
+    "logout": "Logout",
+    "chat":"Chat"
+  },
+  "statCards":{
+  "myChildrenC":"My Children",
+  "averageP":"Average Progress",
+  "enrolledC":"Enrolled Classes",
+  "notifications":"Notifications"
+
+  },
+  "tabs": {
+    "myChildren": "My Children",
+    "announcements": "Announcements",
+    "attendanceRecords": "Attendance Records",
+    "predictions": "Predictions"
+  },
+  "children": {
+    "noChildren": "No children linked to your account yet",
+    "overviewInfo": "Overview of your children's information",
+    "enrolled": "Enrolled",
+    "active": "Active",
+    "phone": "Phone",
+    "address": "Address",
+    "parentOccupation": "Parent Occupation",
+    "dateOfBirth": "Date of Birth",
+    "linkedAs": "You are linked as the parent of this student"
+  },
+  "info": {
+    "importantInfo": "Important Information",
+    "detailsAboutLinked": "Details about your linked children",
+    "contactSchool": "Contact the school administration to link your children to your account.",
+    "checkExercises": "Check their exercises and assignments regularly"
+  },
+  "announcements": {
+    "title": "Announcements",
+    "noAnnouncements": "No announcements yet",
+    "all": "All",
+    "from": "From"
+  },
+  "attendance": {
+    "title": "Attendance Records",
+    "noRecords": "No attendance records yet",
+    "present": "Present",
+    "absent": "Absent"
+  },
+  "predictions": {
+    "title": "Predictions",
+    "noChildren": "No children linked to your account yet",
+    "predict": "Predict",
+    "predicting": "Predicting...",
+    "prediction": "Prediction",
+    "confidence": "Confidence",
+    "dropout": "Dropout",
+    "graduate": "Graduate",
+    "featuresUsed": "Features Used",
+    "totalAbsences": "Total Absences",
+    "absenceRate": "Absence Rate",
+    "exercisesCompleted": "Exercises Completed",
+    "exerciseCompletion": "Exercise Completion",
+    "criticalSkillCompletion": "Critical Skill Completion",
+    "criticalSkillsMissed": "Critical Skills Missed",
+    "failed": "Failed to get prediction"
+  },
+  "chat": {
+    "chat": "Chat",
+    "sendMessage": "Send message...",
+    "send": "Send"
+  },
+  "notifications": {
+    "notifications": "Notifications",
+    "noNotifications": "No notifications",
+    "markAsRead": "Mark all as read"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry"
+  },
+  "language": {
+    "en": "English",
+    "fr": "Français"
+  }
+}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 import { teacherApi, studentApi, chatApi } from '@/lib/api';
@@ -6,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { BookOpen, LogOut, Upload, FileText, Clock, Download, CheckCircle, Star, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
 
@@ -68,14 +72,15 @@ interface AttendanceRecord {
 }
 
 const TABS = [
-  { id: 'my-classes', label: 'My Classes' },
-  { id: 'mark-attendance', label: 'Mark Attendance' },
-  { id: 'create-announcement', label: 'Create Announcement' },
-  { id: 'upload-exercise', label: 'Upload New Exercise' },
-  { id: 'student-submissions', label: 'Student Submissions' },
+  { id: 'my-classes', labelKey: 'teacher.tabs.myClasses' },
+  { id: 'mark-attendance', labelKey: 'teacher.tabs.attendance' },
+  { id: 'create-announcement', labelKey: 'teacher.tabs.announcements' },
+  { id: 'upload-exercise', labelKey: 'teacher.tabs.exercises' },
+  { id: 'student-submissions', labelKey: 'teacher.tabs.submissions' },
 ] as const;
 
 export default function TeacherDashboard() {
+  const { t, i18n } = useTranslation();
   const { logout, user } = useAuth();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-classes');
   const [classes, setClasses] = useState<Class[]>([]);
@@ -290,7 +295,7 @@ export default function TeacherDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">Loading...</div>
+        <div className="text-center">{t('teacher.common.loading')}</div>
       </div>
     );
   }
@@ -300,23 +305,37 @@ export default function TeacherDashboard() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
-            <p className="text-sm text-gray-600">Welcome, {user?.fullName || user?.email}</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('teacher.dashboard.teacherDashboard')}</h1>
+            <p className="text-sm text-gray-600">{t('teacher.dashboard.welcome')}, {user?.fullName || user?.email}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowChat(!showChat)} className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
-              Chat
+              {t('dashboard.chat')}
               {chatUnreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
                 </span>
               )}
             </Button>
-            <Button variant="outline" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
+            <Button variant="outline" onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}>
+              {i18n.language === 'en' ? 'ع' : 'EN'}
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full h-10 w-10 p-0 -translate-y-1">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>{user?.fullName?.charAt(0) || user?.email?.charAt(0) || 'U'}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={logout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  {t('teacher.dashboard.logout')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -393,23 +412,24 @@ export default function TeacherDashboard() {
         </div>
 
         <div className="border-b mb-6">
-          <nav className="-mb-px flex space-x-4" role="tablist">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-                role="tab"
-                aria-selected={activeTab === tab.id}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
+          <NavigationMenu>
+            <NavigationMenuList>
+              {TABS.map((tab) => (
+                <NavigationMenuItem key={tab.id}>
+                  <NavigationMenuLink
+                    href="#"
+                    active={activeTab === tab.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setActiveTab(tab.id);
+                    }}
+                  >
+                    {t(tab.labelKey)}
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
+              ))}
+            </NavigationMenuList>
+          </NavigationMenu>
         </div>
 
         {activeTab === 'my-classes' && (

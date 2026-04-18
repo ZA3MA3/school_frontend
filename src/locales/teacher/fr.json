@@ -1,0 +1,19 @@
+{
+  "dashboard": {
+    "teacherDashboard": "صفحة الاساتذة",
+    "welcome": "مرحبا بك",
+  "logout": "تسجيل الخروج",
+  "chat":"دردشة"
+},
+"tabs": {
+  "myClasses": "فصولي الدراسية",
+  "exercises": "التمارين",
+  "announcements": "الإعلانات",
+  "attendance": "الحضور",
+  "submissions": "التسليمات"
+},
+"common": {
+  "loading": "جاري التحميل...",
+  "error": "خطأ",
+  "retry": "إعادة المحاولة"
+}}

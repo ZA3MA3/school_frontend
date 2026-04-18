@@ -1,0 +1,86 @@
+{
+  "dashboard": {
+    "parentDashboard": "صفحة الاباء",
+    "welcome": "مرحبا بك",
+    "logout": "تسجيل الخروج",
+    "chat":"دردشة"
+  },
+  "statCards":{
+  "myChildrenC":"اطفالي",
+  "averageP":"متوسط ​​التقدم",
+  "enrolledC":"الاقسام المسجلة",
+  "notifications":"الإشعارات"
+
+  },
+  "tabs": {
+    "myChildren": "اطفالي",
+    "announcements": "اعلانات",
+    "attendanceRecords": "حضور",
+    "predictions": "توقعات"
+  },
+  "children": {
+    "noChildren": "لا ابن مرتبط بهذاالحساب",
+    "enrolled": "مسجل",
+    "active": "نشيط",
+    "phone": "هاتف",
+    "address": "العنوان",
+    "parentOccupation": "مهنة الوالد",
+    "dateOfBirth": "تاريخ الميلاد",
+    "linkedAs": "أنت مرتبط كوالد لهذا الطالب"
+  },
+
+"info": {
+  "importantInfo": "معلومات مهمة",
+  "detailsAboutLinked": "تفاصيل عن الأطفال المرتبطين بك",
+  "contactSchool": "تواصل مع إدارة المدرسة لربط أطفالك بحسابك",
+  "checkExercises": "تحقق بانتظام من تمارينهم وواجباتهم"
+},
+"announcements": {
+  "title": "الإعلانات",
+  "noAnnouncements": "لا توجد إعلانات حالياً",
+  "all": "الجميع",
+  "from": "بواسطة"
+},
+"attendance": {
+  "title": "سجل الحضور",
+  "noRecords": "لا توجد سجلات حضور",
+  "present": "حاضر",
+  "absent": "غائب"
+},
+"predictions": {
+  "title": "التنبؤات",
+  "noChildren": "لا يوجد أطفال مرتبطون بحسابك",
+  "predict": "تنبؤ",
+  "predicting": "جاري التنبؤ...",
+  "prediction": "التنبؤ",
+  "confidence": "الثقة",
+  "dropout": "منقطع",
+  "graduate": "متخرج",
+  "featuresUsed": "الخصائص المستخدمة",
+  "totalAbsences": "إجمالي الغيابات",
+  "absenceRate": "نسبة الغياب",
+  "exercisesCompleted": "التمارين المكتملة",
+  "exerciseCompletion": "إتمام التمارين",
+  "criticalSkillCompletion": "إتمام المهارات الأساسية",
+  "criticalSkillsMissed": "المهارات الأساسية المفقودة",
+  "failed": "فشل في التنبؤ"
+},
+"chat": {
+  "chat": "الدردشة",
+  "sendMessage": "أرسل رسالة...",
+  "send": "إرسال"
+},
+"notifications": {
+  "notifications": "الإشعارات",
+  "noNotifications": "لا توجد إشعارات",
+  "markAsRead": "وضع علامة كمقروء للجميع"
+},
+"common": {
+  "loading": "جاري التحميل...",
+  "error": "خطأ",
+  "retry": "إعادة المحاولة"
+},
+"language": {
+  "en": "English",
+  "fr": "Français"
+}}

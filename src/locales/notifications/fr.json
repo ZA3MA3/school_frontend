@@ -1,0 +1,12 @@
+{
+  "title": "الإشعارات",
+  "noNotifications": "لا توجد إشعارات",
+  "markAllRead": "تحديد الكل كمقروء",
+  "justNow": "الآن",
+  "minutesAgo": "دقيقة{{count}} منذ",
+  "minutesAgo_plural": "دقائق{{count}} منذ",
+  "hoursAgo": "ساعة {{count}} منذ",
+  "hoursAgo_plural": "ساعات {{count}} منذ",
+  "daysAgo": "يوم {{count}} منذ",
+  "daysAgo_plural": "أيام {{count}} منذ"
+}

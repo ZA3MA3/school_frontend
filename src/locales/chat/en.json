@@ -1,0 +1,13 @@
+{
+  "title": "Chat",
+  "placeholder": "Type a message...",
+  "send": "Send",
+  "noMessages": "No messages yet",
+  "startConversation": "Start a conversation",
+  "online": "Online",
+  "offline": "Offline",
+  "selectContact": "Select a contact to start chatting",
+  "connected": "Connected",
+  "connecting": "Connecting...",
+  "messages":"Messages"
+}

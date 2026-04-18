@@ -120,5 +120,14 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
   }
+  
+
+  * {
+    font-family: 'Inter', 'IBM Plex Sans Arabic', sans-serif;
+  }
+
+
+  
 }

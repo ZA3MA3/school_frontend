@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { chatApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ interface ChatProps {
 }
 
 export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
@@ -249,7 +251,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
     <div className="flex h-full">
       <div className="w-64 border-r bg-gray-50 flex flex-col">
         <div className="p-4 border-b bg-white flex justify-between items-center">
-          <h2 className="font-semibold">Messages</h2>
+          <h2 className="font-semibold">{t('chat.messages')}</h2>
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
@@ -302,7 +304,8 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
                   <p className="font-semibold">{selectedContact.full_name}</p>
                   <p className="text-xs text-muted-foreground">
                     {selectedContact.role}
-                    {wsConnected ? ' • Connected' : ' • Connecting...'}
+                  {/*  {wsConnected ? ' • Connected' : ' • Connecting...'} */}
+                  {` • ${wsConnected ? t('chat.connected') : t('chat.connecting')}`}
                   </p>
                 </div>
               </div>
@@ -352,7 +355,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type a message..."
+                  placeholder={t('chat.placeholder')}
                   disabled={sending}
                 />
                 <Button onClick={sendMessage} disabled={sending || !newMessage.trim()}>
@@ -365,7 +368,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <p className="text-muted-foreground">Select a contact to start chatting</p>
+              <p className="text-muted-foreground">{t('chat.selectContact')}</p>
             </div>
           </div>
         )}

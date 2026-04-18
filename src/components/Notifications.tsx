@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { notificationApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +19,7 @@ interface NotificationsProps {
 }
 
 export default function Notifications({ onClose }: NotificationsProps) {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -109,7 +111,7 @@ export default function Notifications({ onClose }: NotificationsProps) {
       <div className="fixed inset-0 z-50 bg-black bg-black/50 flex justify-end">
         <Card className="w-full max-w-md h-full rounded-none">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Notifications</CardTitle>
+<CardTitle>{t('notifications.title')}</CardTitle>
             <Button variant="ghost" size="sm" onClick={onClose}>
               <X className="h-4 w-4" />
             </Button>
@@ -135,7 +137,7 @@ export default function Notifications({ onClose }: NotificationsProps) {
           {notifications.length === 0 ? (
             <div className="p-8 text-center">
               <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-muted-foreground">No notifications yet</p>
+              <p className="text-muted-foreground">{t('notifications.noNotifications')}</p>
             </div>
           ) : (
             <div className="divide-y">

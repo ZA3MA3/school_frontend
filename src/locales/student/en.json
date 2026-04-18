@@ -1,0 +1,45 @@
+{
+  "dashboard": {
+    "studentDashboard": "Student Dashboard",
+    "welcome": "Welcome",
+    "logout": "Logout"
+  },
+  "tabs": {
+    "classes": "My Classes",
+    "exercises": "Exercises",
+    "submissions": "My Submissions",
+    "announcements": "Announcements",
+    "attendance": "Attendance"
+  },
+  "classes": {
+    "noClasses": "No classes available",
+    "enroll": "Enroll",
+    "enrolled": "Enrolled",
+    "notEnrolled": "Not Enrolled"
+  },
+  "exercises": {
+    "noExercises": "No exercises available",
+    "dueDate": "Due Date",
+    "submit": "Submit",
+    "submitExercise": "Submit Exercise"
+  },
+  "submissions": {
+    "noSubmissions": "No submissions yet",
+    "submitted": "Submitted",
+    "grade": "Grade",
+    "feedback": "Feedback"
+  },
+  "announcements": {
+    "noAnnouncements": "No announcements"
+  },
+  "attendance": {
+    "noRecords": "No attendance records",
+    "present": "Present",
+    "absent": "Absent"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry"
+  }
+}
