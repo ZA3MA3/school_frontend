@@ -4,6 +4,13 @@
     "welcome": "مرحبا بك",
     "logout": "تسجيل الخروج"
   },
+
+  "statCards":{
+  "enrolledC":"موادي",
+  "availableExercises":"التمارين الموجودة",
+  "submissions":"تسليماتي"
+  },
+
   "tabs": {
     "classes": "موادي",
     "exercises": "تمارين",

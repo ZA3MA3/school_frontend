@@ -5,6 +5,13 @@
     "logout": "Logout",
     "chat":"Chat"
   },
+  "statCards":{
+  "announcements":"announcements",
+  "totalStudents":"Total Students",
+  "exercises":"Exercises",
+  "submissions":"Submissions",
+  "pending":"Pending Review"
+  },
   "tabs": {
     "myClasses": "My Classes",
     "exercises": "Exercises",

@@ -4,6 +4,11 @@
     "welcome": "Welcome",
     "logout": "Logout"
   },
+  "statCards":{
+    "enrolledC":"My Classes",
+    "availableExercises":"Available Exercises",
+    "submissions":"Submitted"
+    },
   "tabs": {
     "classes": "My Classes",
     "exercises": "Exercises",

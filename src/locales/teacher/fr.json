@@ -5,6 +5,13 @@
   "logout": "تسجيل الخروج",
   "chat":"دردشة"
 },
+"statCards":{
+  "announcements":"اعلانات",
+  "totalStudents":"عدد التلاميذ",
+  "exercises":"التمارين",
+  "submissions":"تسليماتي",
+  "pending":"غير مصحح"
+  },
 "tabs": {
   "myClasses": "فصولي الدراسية",
   "exercises": "التمارين",
