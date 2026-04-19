@@ -14,6 +14,21 @@ export default function LandingPage() {
   
   const [heroIndex, setHeroIndex] = useState(0);
   const [showTopBtn, setShowTopBtn] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [contactResponseMsg, setContactResponseMsg] = useState('');
+
+  useEffect(() => {
+    if (contactResponseMsg) {
+      const timer = setTimeout(() => {
+        setContactResponseMsg('');
+        setContactStatus('idle');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [contactResponseMsg]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,6 +54,45 @@ export default function LandingPage() {
   if (isAuthenticated) {
     return <Navigate to="/dashboard" replace />;
   }
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactName || !contactEmail || !contactMessage) {
+      setContactStatus('error');
+      setContactResponseMsg('Please fill in all fields.');
+      return;
+    }
+
+    setContactStatus('loading');
+    try {
+      const res = await fetch('http://localhost:8000/api/users/contact/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: contactName,
+          email: contactEmail,
+          message: contactMessage
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setContactStatus('success');
+        setContactResponseMsg(data.detail || 'Your message has been sent successfully.');
+        setContactName('');
+        setContactEmail('');
+        setContactMessage('');
+      } else {
+        setContactStatus('error');
+        setContactResponseMsg(data.detail || 'Failed to send message. Please try again.');
+      }
+    } catch (err) {
+      setContactStatus('error');
+      setContactResponseMsg('An error occurred. Please try again later.');
+    }
+  };
 
   return (
     <>
@@ -196,30 +250,30 @@ export default function LandingPage() {
             <Card className="bg-black border border-white/10 text-white rounded-none p-8 hover:bg-white/[0.03] transition-colors">
               <CardHeader className="px-0 pt-0">
                 <Users className="h-12 w-12 text-white mb-8" strokeWidth={1} />
-                <CardTitle className="text-3xl font-bold tracking-tighter uppercase">Teachers</CardTitle>
+                <CardTitle className="text-3xl font-bold tracking-tighter uppercase">{t('landing.teachers')}</CardTitle>
               </CardHeader>
               <CardContent className="px-0 pb-0 text-white/50 font-light leading-relaxed text-lg">
-                Streamline grading, attendance, and assignments. Communicate directly with parents and focus on what matters most: teaching.
+                {t('landing.teachersD')}.
               </CardContent>
             </Card>
 
             <Card className="bg-black border border-white/10 text-white rounded-none p-8 hover:bg-white/[0.03] transition-colors">
               <CardHeader className="px-0 pt-0">
                 <MessageSquare className="h-12 w-12 text-white mb-8" strokeWidth={1} />
-                <CardTitle className="text-3xl font-bold tracking-tighter uppercase">Parents</CardTitle>
+                <CardTitle className="text-3xl font-bold tracking-tighter uppercase">{t('landing.parents')}</CardTitle>
               </CardHeader>
               <CardContent className="px-0 pb-0 text-white/50 font-light leading-relaxed text-lg">
-                Stay updated on your child's academic progress. Receive real-time alerts, attendance reports, and direct messages from teachers.
+                {t('landing.parentsD')}.
               </CardContent>
             </Card>
 
             <Card className="bg-black border border-white/10 text-white rounded-none p-8 hover:bg-white/[0.03] transition-colors">
               <CardHeader className="px-0 pt-0">
                 <BookOpen className="h-12 w-12 text-white mb-8" strokeWidth={1} />
-                <CardTitle className="text-3xl font-bold tracking-tighter uppercase">Students</CardTitle>
+                <CardTitle className="text-3xl font-bold tracking-tighter uppercase">{t('landing.students')}</CardTitle>
               </CardHeader>
               <CardContent className="px-0 pb-0 text-white/50 font-light leading-relaxed text-lg">
-                Access learning materials, track grades, and submit assignments from anywhere. Your entire academic life in your pocket.
+               {t('landing.studentsD')}.
               </CardContent>
             </Card>
           </div>
@@ -252,11 +306,10 @@ export default function LandingPage() {
         </div>
         <div className="flex-1 space-y-12">
           <h2 className="text-6xl md:text-[6rem] font-black leading-[0.95] tracking-tighter uppercase">
-            School. <br/> <span className="text-white/40">Anywhere.</span>
+            {t('landing.school')}. <br/> <span className="text-white/40">{t('landing.anywhere')}.</span>
           </h2>
           <p className="text-2xl text-white/50 font-light leading-relaxed max-w-xl">
-            Download our official mobile application. 
-            Stay connected with push notifications, on-the-go grading, and instant messaging.
+          {t('landing.schoolAnywhereD')}
           </p>
           <div className="pt-6">
             <Button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white h-16 px-10 rounded-none flex items-center gap-5 transition-all">
@@ -279,32 +332,62 @@ export default function LandingPage() {
       <section id="contact" className="container mx-auto px-6 py-25  pb-5 border-t border-white/10">
         <div className="max-w-2xl mx-auto space-y-12 text-center">
           <div className="space-y-4">
-            <h2 className="text-5xl font-black tracking-tighter uppercase">Get in Touch</h2>
+            <h2 className="text-5xl font-black tracking-tighter uppercase">{t('landing.getInTouch')}</h2>
             <p className="text-white/50 text-xl font-light">
-              Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              {t('landing.getInTouchD')}
             </p>
           </div>
           
-          <form className="space-y-6 text-left" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-6 text-left" onSubmit={handleContactSubmit}>
+            {contactStatus === 'success' && (
+              <div className="bg-green-500/20 text-green-400 border border-green-500/50 p-4 text-sm font-bold uppercase tracking-widest text-center">
+                {contactResponseMsg}
+              </div>
+            )}
+            {contactStatus === 'error' && (
+              <div className="bg-red-500/20 text-red-400 border border-red-500/50 p-4 text-sm font-bold uppercase tracking-widest text-center">
+                {contactResponseMsg}
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest font-bold text-white/70">Name</label>
-                <Input placeholder="John Doe" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 rounded-none" />
+                <label className="text-xs uppercase tracking-widest font-bold text-white/70">{t('landing.name')}</label>
+                <Input 
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  placeholder="John Doe" 
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 rounded-none" 
+                  disabled={contactStatus === 'loading'}
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-xs uppercase tracking-widest font-bold text-white/70">Email</label>
-                <Input type="email" placeholder="john@example.com" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 rounded-none" />
+                <label className="text-xs uppercase tracking-widest font-bold text-white/70">{t('landing.email')}</label>
+                <Input 
+                  type="email" 
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="john@example.com" 
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 rounded-none" 
+                  disabled={contactStatus === 'loading'}
+                />
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-widest font-bold text-white/70">Message</label>
+              <label className="text-xs uppercase tracking-widest font-bold text-white/70">{t('landing.message')}</label>
               <textarea 
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
                 placeholder="How can we help you?" 
                 className="flex min-h-[150px] w-full border border-white/10 bg-white/5 px-3 py-2 text-sm ring-offset-background placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-none"
+                disabled={contactStatus === 'loading'}
               />
             </div>
-            <Button className="w-full bg-white text-black hover:bg-gray-200 h-14 rounded-none text-sm font-bold uppercase tracking-[0.2em] transition-all">
-              Send Message
+            <Button 
+              type="submit"
+              disabled={contactStatus === 'loading'}
+              className="w-full bg-white text-black hover:bg-gray-200 h-14 rounded-none text-sm font-bold uppercase tracking-[0.2em] transition-all"
+            >
+              {contactStatus === 'loading' ? t('landing.sending') : t('landing.sendMessage')}
             </Button>
           </form>
         </div>

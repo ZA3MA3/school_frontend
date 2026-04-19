@@ -6,5 +6,21 @@
   "description":"A unified ecosystem designed to bridge the gap between education and communication.",
   "meaning":"Meaningful",
   "meaning1":"Connections",
-  "meaningDesc":"Our system ensures that everyone involved in the educational journey stays informed, engaged, and empowered"
+  "meaningDesc":"Our system ensures that everyone involved in the educational journey stays informed, engaged, and empowered",
+  "teachersD":"Streamline grading, attendance, and assignments. Communicate directly with parents and focus on what matters most: teaching",
+  "teachers":"TEACHERS",
+  "parents":"PARENTS",
+  "parentsD":"Stay updated on your child's academic progress. Receive real-time alerts, attendance reports, and direct messages from teachers",
+  "students":"STUDENTS",
+  "studentsD":"Access learning materials, track grades, and submit assignments from anywhere. Your entire academic life in your pocket",
+  "school":"SCHOOL",
+  "anywhere":"ANYWHERE",
+  "schoolAnywhereD":"Download our official mobile application. Stay connected with real time notifications, on-the-go grading, and instant messaging",
+  "getInTouch":"GET IN TOUCH",
+  "getInTouchD":"Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible",
+  "name":"Name",
+  "email":"Email",
+  "message":"Message",
+  "sendMessage":"Send Message",
+  "sending":"sending"
 }
