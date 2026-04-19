@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 import { parentApi, chatApi } from '@/lib/api';
@@ -7,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
 
@@ -80,6 +81,7 @@ interface PredictionResult {
 
 export default function ParentDashboard() {
   const { t, i18n } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const { logout, user } = useAuth();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-children');
   const [selectedChildForAnnouncements, setSelectedChildForAnnouncements] = useState<string>('');
@@ -167,7 +169,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-850">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
@@ -203,10 +205,15 @@ export default function ParentDashboard() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+<DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                  {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  {t('dashboard.logout')}
+                  {t('parent.dashboard.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

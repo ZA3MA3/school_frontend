@@ -135,8 +135,8 @@ export default function Notifications({ onClose }: NotificationsProps) {
         </CardHeader>
         <CardContent className="flex-1 overflow-y-auto p-0">
           {notifications.length === 0 ? (
-            <div className="p-8 text-center">
-              <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+<div className="p-8 text-center">
+              <Bell className="h-12 w-12 text-gray-300 dark:text-zinc-600 mx-auto mb-4" />
               <p className="text-muted-foreground">{t('notifications.noNotifications')}</p>
             </div>
           ) : (
@@ -146,8 +146,8 @@ export default function Notifications({ onClose }: NotificationsProps) {
                   key={notification.id}
                   ref={notificationRef}
                   data-notification-id={notification.id}
-                  className={`p-4 hover:bg-gray-50 transition-colors ${
-                    !notification.is_read ? 'bg-blue-50' : ''
+className={`p-4 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors ${
+                    !notification.is_read ? 'bg-blue-50 dark:bg-blue-950' : ''
                   }`}
                 >
                   <div className="flex gap-3">

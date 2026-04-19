@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 import { teacherApi, studentApi, chatApi } from '@/lib/api';
@@ -9,8 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { BookOpen, LogOut, Upload, FileText, Clock, Download, CheckCircle, Star, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Moon, Sun, BookOpen, LogOut, Upload, FileText, Clock, Download, CheckCircle, Star, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
 
 interface Class {
@@ -81,6 +82,7 @@ const TABS = [
 
 export default function TeacherDashboard() {
   const { t, i18n } = useTranslation();
+  const { theme, setTheme } = useTheme();
   const { logout, user } = useAuth();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-classes');
   const [classes, setClasses] = useState<Class[]>([]);
@@ -301,7 +303,7 @@ export default function TeacherDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-850">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
@@ -329,7 +331,12 @@ export default function TeacherDashboard() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+<DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                  {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   {t('teacher.dashboard.logout')}

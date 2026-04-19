@@ -248,9 +248,9 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
   }
 
   return (
-    <div className="flex h-full">
-      <div className="w-64 border-r border-t bg-gray-50 flex flex-col">
-        <div className="p-4 border-b bg-white flex justify-between items-center">
+<div className="flex h-full">
+      <div className="w-64 border-r border-t dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 flex flex-col">
+        <div className="p-4 border-b bg-white dark:bg-zinc-900 flex justify-between items-center">
           <h2 className="font-semibold">{t('chat.messages')}</h2>
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -266,8 +266,8 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
               <button
                 key={contact.id}
                 onClick={() => setSelectedContact(contact)}
-                className={`w-full p-4 text-left hover:bg-gray-100 transition-colors border-b ${
-                  selectedContact?.id === contact.id ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors border-b ${
+                  selectedContact?.id === contact.id ? 'bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500' : ''
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -295,14 +295,14 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
       <div className="flex-1 flex flex-col">
         {selectedContact ? (
           <>
-            <div className="p-4 border-b bg-white">
+<div className="p-4 border-b bg-white dark:bg-zinc-900">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
                   {selectedContact.full_name.charAt(0).toUpperCase()}
                 </div>
                 <div>
                   <p className="font-semibold">{selectedContact.full_name}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-xs text-muted-foreground dark:text-gray-400">
                     {selectedContact.role}
                  
                   {` • ${wsConnected ? t('chat.connected') : t('chat.connecting')}`}
@@ -314,10 +314,10 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {Object.entries(groupMessagesByDate(messages)).map(([dateKey, msgs]) => (
                 <div key={dateKey}>
-                  <div className="flex items-center gap-4 my-4">
-                    <div className="flex-1 h-px bg-gray-200"></div>
+<div className="flex items-center gap-4 my-4">
+                    <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-700"></div>
                     <span className="text-xs text-muted-foreground">{formatDate(dateKey)}</span>
-                    <div className="flex-1 h-px bg-gray-200"></div>
+                    <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-700"></div>
                   </div>
                   {msgs.map((msg) => (
                     <div
@@ -326,17 +326,17 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
                         msg.sender === user?.id ? 'justify-end' : 'justify-start'
                       }`}
                     >
-                      <div
+<div
                         className={`max-w-[70%] rounded-lg px-4 py-2 ${
                           msg.sender === user?.id
                             ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-900'
+                            : 'bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-gray-100'
                         }`}
                       >
                         <p className="text-sm">{msg.content}</p>
                         <p
                           className={`text-xs mt-1 ${
-                            msg.sender === user?.id ? 'text-blue-100' : 'text-gray-500'
+                            msg.sender === user?.id ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
                           }`}
                         >
                           {formatTime(msg.created_at)}
@@ -349,7 +349,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 border-t bg-white">
+            <div className="p-4 border-t bg-white dark:bg-zinc-900">
               <div className="flex gap-2">
                 <Input
                   value={newMessage}
@@ -367,7 +367,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
         ) : (
           <div className="flex-1 border-t flex items-center justify-center">
             <div className="text-center">
-              <MessageSquare className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+              <MessageSquare className="h-16 w-16 text-gray-300 dark:text-zinc-600 mx-auto mb-4" />
               <p className="text-muted-foreground">{t('chat.selectContact')}</p>
             </div>
           </div>
