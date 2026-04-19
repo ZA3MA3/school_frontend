@@ -1,12 +1,23 @@
+import { useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlayCircle, Users, BookOpen, MessageSquare } from 'lucide-react';
+import { PlayCircle, Users, BookOpen, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsAuthenticated } from '@/stores/authStore';
 import  TypeWriter  from '@/components/TypeWriter.tsx'
 
 export default function LandingPage() {
   const isAuthenticated = useIsAuthenticated();
+  
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [appIndex, setAppIndex] = useState(0);
+  const heroImagesCount = 3;
+  const appImagesCount = 3;
+
+  const nextHero = () => setHeroIndex((prev) => (prev + 1) % heroImagesCount);
+  const prevHero = () => setHeroIndex((prev) => (prev - 1 + heroImagesCount) % heroImagesCount);
+  const nextApp = () => setAppIndex((prev) => (prev + 1) % appImagesCount);
+  const prevApp = () => setAppIndex((prev) => (prev - 1 + appImagesCount) % appImagesCount);
 
   // Redirect authenticated users to the dashboard routing logic
   if (isAuthenticated) {
@@ -123,8 +134,22 @@ export default function LandingPage() {
           {/* Hero Image Placeholder */}
           <div className="w-full aspect-[21/9] bg-[#0a0a0a] border border-white/10 flex items-center justify-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.04] transition-colors duration-700" />
+            
+            <button onClick={prevHero} className="absolute left-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+            <button onClick={nextHero} className="absolute right-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+              <ChevronRight className="h-8 w-8" />
+            </button>
+
             <div className="flex flex-col items-center text-white/30 space-y-4 z-10 text-center px-4">
-              <span className="text-sm md:text-lg uppercase tracking-[0.3em] font-light">[ Hero Video / Dashboard Image ]</span>
+              <span className="text-sm md:text-lg uppercase tracking-[0.3em] font-light">[ Hero Video / Dashboard Image {heroIndex + 1} ]</span>
+            </div>
+
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+              {Array.from({ length: heroImagesCount }).map((_, i) => (
+                <div key={i} className={`h-1.5 rounded-full transition-all ${i === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/30'}`} />
+              ))}
             </div>
           </div>
         </div>
@@ -178,9 +203,23 @@ export default function LandingPage() {
       <section className="container mx-auto px-6 py-40 flex flex-col-reverse lg:flex-row items-center gap-24">
         <div className="flex-1 w-full flex justify-center lg:justify-end">
           {/* App Mockup Image Placeholder */}
-          <div className="w-full max-w-[340px] aspect-[9/16] bg-[#0a0a0a] border border-white/10 flex items-center justify-center relative overflow-hidden">
+          <div className="w-full max-w-[340px] aspect-[9/16] bg-[#0a0a0a] border border-white/10 flex items-center justify-center relative overflow-hidden group">
+            
+            <button onClick={prevApp} className="absolute left-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+              <ChevronLeft className="h-6 w-6" />
+            </button>
+            <button onClick={nextApp} className="absolute right-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+              <ChevronRight className="h-6 w-6" />
+            </button>
+
              <div className="flex flex-col items-center text-white/30 space-y-4 text-center px-6 z-10">
-              <span className="text-xs uppercase tracking-[0.3em] font-light">[ Mobile App ]</span>
+              <span className="text-xs uppercase tracking-[0.3em] font-light">[ Mobile App {appIndex + 1} ]</span>
+            </div>
+
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+              {Array.from({ length: appImagesCount }).map((_, i) => (
+                <div key={i} className={`h-1.5 rounded-full transition-all ${i === appIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/30'}`} />
+              ))}
             </div>
           </div>
         </div>

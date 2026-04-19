@@ -37,8 +37,71 @@ export default function LoginPage() {
   };
 
 return (
-<div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 px-4">
-      <div className="absolute top-4 right-4 flex gap-2"> 
+  <>
+    <style>{`
+      .lines {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 100%;
+        margin: auto;
+        width: 90vw;
+        z-index: 0;
+        pointer-events: none;
+      }
+      .line {
+        position: absolute;
+        width: 1px;
+        height: 100%;
+        top: 0;
+        left: 50%;
+        background: rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .dark .line {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .line::after {
+        content: '';
+        display: block;
+        position: absolute;
+        height: 15vh;
+        width: 100%;
+        top: -50%;
+        left: 0;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000000 75%, #000000 100%);
+        animation: drop 7s 0s infinite;
+        animation-fill-mode: forwards;
+        animation-timing-function: cubic-bezier(0.4, 0.26, 0, 0.97);
+      }
+      .dark .line::after {
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #ffffff 75%, #ffffff 100%);
+      }
+      .line:nth-child(1) {
+        margin-left: -25%;
+      }
+      .line:nth-child(1)::after {
+        animation-delay: 2s;
+      }
+      .line:nth-child(3) {
+        margin-left: 25%;
+      }
+      .line:nth-child(3)::after {
+        animation-delay: 2.5s;
+      }
+      @keyframes drop {
+        0% { top: -50%; }
+        100% { top: 110%; }
+      }
+    `}</style>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 px-4 relative overflow-hidden">
+      <div className="lines">
+        <div className="line"></div>
+        <div className="line"></div>
+        <div className="line"></div>
+      </div>
+      <div className="absolute top-4 right-4 flex gap-2 z-10"> 
         <Button variant="outline" onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}>
           {i18n.language === 'en' ? 'ع' : 'EN'}
         </Button>
@@ -47,7 +110,7 @@ return (
         </Button>
        
       </div>
-      <Card className="w-full max-w-md dark:bg-zinc-800">
+      <Card className="w-full max-w-md dark:bg-zinc-800 relative z-10">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <div className="bg-primary p-3 rounded-full">
@@ -124,5 +187,6 @@ return (
         </form>
       </Card>
     </div>
+  </>
   );
 }
