@@ -1,15 +1,31 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlayCircle, Users, BookOpen, MessageSquare, ChevronLeft, ChevronRight } from 'lucide-react';
+import { PlayCircle, Users, BookOpen, MessageSquare, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { useIsAuthenticated } from '@/stores/authStore';
+import { useTranslation } from 'react-i18next';
 import  TypeWriter  from '@/components/TypeWriter.tsx'
 
 export default function LandingPage() {
   const isAuthenticated = useIsAuthenticated();
+  const { t, i18n } = useTranslation();
   
   const [heroIndex, setHeroIndex] = useState(0);
+  const [showTopBtn, setShowTopBtn] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 400) {
+        setShowTopBtn(true);
+      } else {
+        setShowTopBtn(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   const [appIndex, setAppIndex] = useState(0);
   const heroImagesCount = 3;
   const appImagesCount = 3;
@@ -95,10 +111,21 @@ export default function LandingPage() {
             <span className="text-2xl font-extrabold tracking-tighter uppercase">SmartSchool</span>
           </div>
           <div className="flex items-center space-x-8">
-            
+            <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}>
+              {i18n.language === 'en' ? 'ع' : 'EN'}
+            </Button>
+            <button 
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="text-sm font-bold tracking-widest text-white/70 hover:text-white transition-colors uppercase"
+            >
+              {t('landing.contactUs')}
+            </button>
             <Link to="/login">
               <Button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-none px-8 h-12 uppercase tracking-widest text-xs font-bold transition-all">
-              Sign In
+              {t('landing.signIn')}
               </Button>
             </Link>
           </div>
@@ -111,20 +138,20 @@ export default function LandingPage() {
               <div className="slider-thumb"></div>
             </div> */}
             <h1 className="text-6xl md:text-[7rem] font-black leading-[0.95] tracking-tighter uppercase relative">
-            <span className="inline-block min-w-[4ch]"><TypeWriter /></span> Management <br/> <span className="text-white/60">Reimagined.</span>
+            <span className="block min-w-[10ch]" style={{ minWidth: 'max-content' }}><TypeWriter /></span> <span className="inline-block" style={{ minWidth: 'max-content' }}>{t('landing.management')}</span>  <br/> <span className="inline-block text-white/60 " style={{ minWidth: 'max-content' }}>{t('landing.reimagined')}</span>
             </h1>
             <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed max-w-3xl mx-auto relative">
-              A unified ecosystem designed to bridge the gap between education and communication.
+            {t('landing.description')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 relative">
               <Link to="/login">
                 <Button className="bg-white text-black hover:bg-gray-200 rounded-none h-14 px-10 text-sm font-bold uppercase tracking-[0.2em] transition-all">
-                  Get Started
+                  {t('landing.getStarted')}
                 </Button>
               </Link>
               <Link to="#features">
                 <Button variant="ghost" className="text-white hover:bg-white/10 rounded-none h-14 px-10 text-sm font-bold uppercase tracking-[0.2em] transition-all border border-white/20">
-                  Learn More
+                {t('landing.learnMore')}
                 </Button>
               </Link>
             </div>
@@ -159,9 +186,9 @@ export default function LandingPage() {
       <section id="features" className="bg-[#050505] py-32 border-y border-white/10">
         <div className="container mx-auto px-6">
           <div className="mb-24 space-y-6">
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none">Meaningful <br/> Connections</h2>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-none">{t('landing.meaning')} <br/> {t('landing.meaning1')}</h2>
             <p className="text-white/50 text-2xl font-light max-w-2xl">
-              Our system ensures that everyone involved in the educational journey stays informed, engaged, and empowered.
+              {t('landing.meaningDesc')}.
             </p>
           </div>
 
@@ -248,6 +275,41 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Contact Section */}
+      <section id="contact" className="container mx-auto px-6 py-25  pb-5 border-t border-white/10">
+        <div className="max-w-2xl mx-auto space-y-12 text-center">
+          <div className="space-y-4">
+            <h2 className="text-5xl font-black tracking-tighter uppercase">Get in Touch</h2>
+            <p className="text-white/50 text-xl font-light">
+              Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+            </p>
+          </div>
+          
+          <form className="space-y-6 text-left" onSubmit={(e) => e.preventDefault()}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest font-bold text-white/70">Name</label>
+                <Input placeholder="John Doe" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 rounded-none" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs uppercase tracking-widest font-bold text-white/70">Email</label>
+                <Input type="email" placeholder="john@example.com" className="bg-white/5 border-white/10 text-white placeholder:text-white/30 h-12 rounded-none" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-widest font-bold text-white/70">Message</label>
+              <textarea 
+                placeholder="How can we help you?" 
+                className="flex min-h-[150px] w-full border border-white/10 bg-white/5 px-3 py-2 text-sm ring-offset-background placeholder:text-white/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 text-white rounded-none"
+              />
+            </div>
+            <Button className="w-full bg-white text-black hover:bg-gray-200 h-14 rounded-none text-sm font-bold uppercase tracking-[0.2em] transition-all">
+              Send Message
+            </Button>
+          </form>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="border-t border-white/10 bg-black py-16">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
@@ -260,6 +322,15 @@ export default function LandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* Go to Top Button */}
+      <button 
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={`fixed bottom-8 right-8 p-4 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-none backdrop-blur-md transition-all duration-300 z-50 group ${showTopBtn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}
+        aria-label="Go to top"
+      >
+        <ArrowUp className="h-6 w-6 group-hover:-translate-y-1 transition-transform" />
+      </button>
     </div>
     </>
   );

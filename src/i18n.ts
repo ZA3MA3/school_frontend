@@ -14,6 +14,8 @@ import chatEn from './locales/chat/en.json';
 import chatFr from './locales/chat/fr.json';
 import notificationsEn from './locales/notifications/en.json';
 import notificationsFr from './locales/notifications/fr.json';
+import landingEn from './locales/landing/en.json';
+import landingFr from './locales/landing/fr.json';
 
 i18n
   .use(LanguageDetector)
@@ -27,7 +29,8 @@ i18n
           student: studentEn,
           login: loginEn,
           chat: chatEn,
-          notifications: notificationsEn
+          notifications: notificationsEn,
+          landing: landingEn
         } 
       },
       fr: { 
@@ -37,7 +40,8 @@ i18n
           student: studentFr,
           login: loginFr,
           chat: chatFr,
-          notifications: notificationsFr
+          notifications: notificationsFr,
+          landing: landingFr
         } 
       }
     },
