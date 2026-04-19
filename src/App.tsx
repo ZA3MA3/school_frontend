@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import LandingPage from '@/pages/landingPage';
 import LoginPage from '@/pages/LoginPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import TeacherDashboard from '@/pages/TeacherDashboard';
@@ -35,8 +36,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Root - redirects based on auth status */}
-        <Route path="/" element={<HomeRedirect />} />
+        {/* Root - Landing Page */}
+        <Route path="/" element={<LandingPage />} />
+        
+        {/* Dashboard Entry Point - redirects based on auth status */}
+        <Route path="/dashboard" element={<HomeRedirect />} />
         
         {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
