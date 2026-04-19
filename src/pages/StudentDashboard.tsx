@@ -390,7 +390,7 @@ return (
           </Card>
         )}
 
-        {activeTab === 'announcements' && (
+{activeTab === 'announcements' && (
           <Card>
             <CardHeader>
               <CardTitle>Announcements</CardTitle>
@@ -409,12 +409,12 @@ return (
                       return acc;
                     }, {} as { [key: string]: Announcement[] })
                   ).map(([teacherName, anns]) => (
-                    <div key={teacherName} className="border rounded-lg p-4">
-                      <h4 className="font-semibold text-lg mb-3">From: {teacherName}</h4>
+                    <div key={teacherName} className="border rounded-lg p-4 dark:border-zinc-700">
+                      <h4 className="font-semibold text-lg mb-3 dark:text-white">From: {teacherName}</h4>
                       <div className="space-y-3">
                         {anns.map((ann) => (
-                          <div key={ann.id} className="p-3 bg-gray-50 rounded">
-                            <h5 className="font-medium">{ann.title}</h5>
+                          <div key={ann.id} className="p-3 bg-gray-50 dark:bg-zinc-800 rounded">
+                            <h5 className="font-medium dark:text-white">{ann.title}</h5>
                             <p className="text-sm text-muted-foreground mt-1">{ann.content}</p>
                             <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
                               {ann.class_name && <span>Class: {ann.class_name}</span>}
@@ -492,9 +492,9 @@ return (
                                 })}
                               </div>
                             )}
-                            {submission && submission.grade !== null && (
-                              <div className="mt-2 p-2 bg-blue-50 rounded">
-                                <p className="text-sm">
+{submission && submission.grade !== null && (
+                              <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-950 rounded">
+                                <p className="text-sm dark:text-white">
                                   <strong>Grade:</strong> {submission.grade}/20
                                   {submission.feedback && (
                                     <>
@@ -558,7 +558,7 @@ return (
           </Card>
         )}
 
-        {activeTab === 'my-attendance' && (
+{activeTab === 'my-attendance' && (
           <Card>
             <CardHeader>
               <CardTitle>My Attendance</CardTitle>
@@ -570,31 +570,31 @@ return (
               ) : (
                 <div className="space-y-4 max-h-[400px] overflow-y-auto">
                   <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="p-3 bg-green-50 rounded">
-                      <p className="text-2xl font-bold text-green-600">
+                    <div className="p-3 bg-green-50 dark:bg-green-900 rounded">
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                         {attendance.filter(r => r.status === 'PRESENT').length}
                       </p>
-                      <p className="text-sm text-green-600">Present</p>
+                      <p className="text-sm text-green-600 dark:text-green-400">Present</p>
                     </div>
-                    <div className="p-3 bg-red-50 rounded">
-                      <p className="text-2xl font-bold text-red-600">
+                    <div className="p-3 bg-red-50 dark:bg-red-900 rounded">
+                      <p className="text-2xl font-bold text-red-600 dark:text-red-400">
                         {attendance.filter(r => r.status === 'ABSENT').length}
                       </p>
-                      <p className="text-sm text-red-600">Absent</p>
+                      <p className="text-sm text-red-600 dark:text-red-400">Absent</p>
                     </div>
                   </div>
                   {attendance.map((record) => (
-                    <div key={record.id} className="flex items-center justify-between p-3 border rounded">
+                    <div key={record.id} className="flex items-center justify-between p-3 border rounded dark:border-zinc-700">
                       <div>
-                        <p className="font-medium">{record.class_name}</p>
+                        <p className="font-medium dark:text-white">{record.class_name}</p>
                         <p className="text-sm text-muted-foreground">
                           {new Date(record.date).toLocaleDateString()} - Teacher: {record.teacher_name}
                         </p>
                       </div>
                       <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${
                         record.status === 'PRESENT' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' 
+                          : 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
                       }`}>
                         {record.status === 'PRESENT' ? (
                           <UserCheck className="h-4 w-4" />

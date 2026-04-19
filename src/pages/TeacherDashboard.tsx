@@ -473,14 +473,14 @@ return (
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+<div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="attendanceClass">Select Class</Label>
                     <select
                       id="attendanceClass"
                       value={attendanceClassId}
                       onChange={(e) => setAttendanceClassId(e.target.value)}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-2 border rounded-md bg-white dark:bg-zinc-800 dark:text-white dark:border-zinc-700"
                     >
                       <option value="">Choose a class</option>
                       {classes.map((cls) => (
@@ -508,13 +508,13 @@ return (
                   </Button>
                 )}
 
-                {attendanceClassId && selectedClass && (
-                  <div className="border rounded-lg p-4">
-                    <h4 className="font-medium mb-3">Students in {selectedClass.name}</h4>
+{attendanceClassId && selectedClass && (
+                  <div className="border rounded-lg p-4 dark:border-zinc-700">
+                    <h4 className="font-medium mb-3 dark:text-white">Students in {selectedClass.name}</h4>
                     <div className="space-y-2 max-h-[400px] overflow-y-auto">
                       {selectedClass.students?.map((student) => (
-                        <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                          <span className="font-medium">{student.full_name}</span>
+                        <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded">
+                          <span className="font-medium dark:text-white">{student.full_name}</span>
                           <div className="flex gap-2">
                             <Button
                               size="sm"

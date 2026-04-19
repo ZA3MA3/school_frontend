@@ -419,7 +419,7 @@ export default function ParentDashboard() {
           </div>
         )}
 
-        {activeTab === 'announcements' && (
+{activeTab === 'announcements' && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Announcements</CardTitle>
@@ -430,7 +430,7 @@ export default function ParentDashboard() {
                 <p className="text-muted-foreground">No announcements yet</p>
               ) : (
                 <div>
-                  <div className="border-b mb-4">
+                  <div className="border-b mb-4 dark:border-zinc-700">
                     <NavigationMenu>
                       <NavigationMenuList>
                         <NavigationMenuItem>
@@ -477,8 +477,8 @@ export default function ParentDashboard() {
                           return acc;
                         }, {} as { [key: string]: AnnouncementData[] })
                       ).map(([childName, anns]) => (
-                        <div key={childName} className="border rounded-lg p-4">
-                          <h4 className="font-semibold text-lg mb-3">{childName}</h4>
+<div key={childName} className="border rounded-lg p-4 dark:border-zinc-700">
+                          <h4 className="font-semibold text-lg mb-3 dark:text-white">{childName}</h4>
                           <div className="space-y-3">
                             {Object.entries(
                               anns.reduce((acc, ann) => {
@@ -488,8 +488,8 @@ export default function ParentDashboard() {
                                 return acc;
                               }, {} as { [key: string]: AnnouncementData['announcement'][] })
                             ).map(([teacherName, teacherAnns]) => (
-                              <div key={teacherName} className="bg-gray-50 rounded p-3">
-                                <h5 className="font-medium text-sm text-gray-600 mb-2">From: {teacherName}</h5>
+                              <div key={teacherName} className="bg-gray-50 dark:bg-zinc-800 rounded p-3">
+                                <h5 className="font-medium text-sm text-gray-600 dark:text-gray-400 mb-2">From: {teacherName}</h5>
                                 {teacherAnns.map((ann) => (
                                   <div key={ann.id} className="mb-2 last:mb-0 pl-3 border-l-2 border-blue-300">
                                     <p className="font-medium">{ann.title}</p>
@@ -513,7 +513,7 @@ export default function ParentDashboard() {
           </Card>
         )}
 
-        {activeTab === 'attendance-records' && (
+{activeTab === 'attendance-records' && (
           <Card className="mt-6">
             <CardHeader>
               <CardTitle>Attendance Records</CardTitle>
@@ -524,7 +524,7 @@ export default function ParentDashboard() {
                 <p className="text-muted-foreground">No attendance records yet</p>
               ) : (
                 <div>
-                  <div className="border-b mb-4">
+                  <div className="border-b mb-4 dark:border-zinc-700">
                     <NavigationMenu>
                       <NavigationMenuList>
                         <NavigationMenuItem>
@@ -560,16 +560,16 @@ export default function ParentDashboard() {
                     {childAttendance.length === 0 ? (
                       <p className="text-muted-foreground">No attendance records for {selectedChildForAttendance || 'any child'}</p>
                     ) : (
-                      childAttendance.map((childData) => (
-                        <div key={childData.child_name} className="border rounded-lg p-4">
+childAttendance.map((childData) => (
+                        <div key={childData.child_name} className="border rounded-lg p-4 dark:border-zinc-700">
                           <div className="flex justify-between items-center mb-4">
-                            <h4 className="font-semibold text-lg">{childData.child_name}</h4>
+                            <h4 className="font-semibold text-lg dark:text-white">{childData.child_name}</h4>
                             <div className="flex gap-4">
-                              <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                              <span className="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-full text-sm">
                                 <UserCheck className="inline h-4 w-4 mr-1" />
                                 {childData.attendance.filter(r => r.status === 'PRESENT').length} Present
                               </span>
-                              <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                              <span className="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full text-sm">
                                 <UserX className="inline h-4 w-4 mr-1" />
                                 {childData.attendance.filter(r => r.status === 'ABSENT').length} Absent
                               </span>
@@ -577,9 +577,9 @@ export default function ParentDashboard() {
                           </div>
                           <div className="space-y-2 max-h-[300px] overflow-y-auto">
                             {childData.attendance.map((record) => (
-                              <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded">
+                              <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded">
                                 <div>
-                                  <p className="font-medium">{record.class_name}</p>
+                                  <p className="font-medium dark:text-white">{record.class_name}</p>
                                   <p className="text-sm text-muted-foreground">
                                     {new Date(record.date).toLocaleDateString()} - Teacher: {record.teacher_name}
                                   </p>
@@ -623,10 +623,10 @@ export default function ParentDashboard() {
                   {children.map((child) => {
                     const prediction = predictions[child.id];
                     return (
-                      <div key={child.id} className="border rounded-lg p-4">
+<div key={child.id} className="border rounded-lg p-4 dark:border-zinc-700">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <p className="font-medium text-lg">{child.full_name}</p>
+                            <p className="font-medium text-lg dark:text-white">{child.full_name}</p>
                           </div>
                           {!prediction && (
                             <Button
@@ -642,49 +642,49 @@ export default function ParentDashboard() {
                         
                         {prediction && (
                           <div className="space-y-4">
-                            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+                            <div className="flex items-center justify-between p-4 rounded-lg bg-gray-50 dark:bg-zinc-800">
                               <div>
                                 <p className="text-sm text-muted-foreground">Prediction</p>
                                 <p className={`text-xl font-bold ${
-                                  prediction.prediction === 'Dropout' ? 'text-red-600' : 'text-green-600'
+                                  prediction.prediction === 'Dropout' ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
                                 }`}>
                                   {prediction.prediction}
                                 </p>
                               </div>
                               <div className="text-right">
                                 <p className="text-sm text-muted-foreground">Confidence</p>
-                                <p className="text-xl font-bold">
+                                <p className="text-xl font-bold dark:text-white">
                                   {(prediction.confidence * 100).toFixed(1)}%
                                 </p>
                               </div>
                             </div>
                             
-                            <div className="border-t pt-4">
-                              <p className="text-sm font-medium mb-3">Features Used</p>
+                            <div className="border-t pt-4 dark:border-zinc-700">
+                              <p className="text-sm font-medium mb-3 dark:text-white">Features Used</p>
                               <div className="grid grid-cols-2 gap-3 text-sm">
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Total Absences</span>
-                                  <span className="font-medium">{prediction.features_used.total_absences}</span>
+                                  <span className="font-medium dark:text-white">{prediction.features_used.total_absences}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Absence Rate</span>
-                                  <span className="font-medium">{(prediction.features_used.absence_rate * 100).toFixed(1)}%</span>
+                                  <span className="font-medium dark:text-white">{(prediction.features_used.absence_rate * 100).toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Exercises Completed</span>
-                                  <span className="font-medium">{prediction.features_used.exercises_completed}</span>
+                                  <span className="font-medium dark:text-white">{prediction.features_used.exercises_completed}</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Exercise Completion</span>
-                                  <span className="font-medium">{(prediction.features_used.exercise_completion_rate * 100).toFixed(1)}%</span>
+                                  <span className="font-medium dark:text-white">{(prediction.features_used.exercise_completion_rate * 100).toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Critical Skill Completion</span>
-                                  <span className="font-medium">{(prediction.features_used.critical_skill_completion_rate * 100).toFixed(1)}%</span>
+                                  <span className="font-medium dark:text-white">{(prediction.features_used.critical_skill_completion_rate * 100).toFixed(1)}%</span>
                                 </div>
                                 <div className="flex justify-between">
                                   <span className="text-muted-foreground">Critical Skills Missed</span>
-                                  <span className="font-medium">{prediction.features_used.total_critical_skills_missed}</span>
+                                  <span className="font-medium dark:text-white">{prediction.features_used.total_critical_skills_missed}</span>
                                 </div>
                               </div>
                             </div>
