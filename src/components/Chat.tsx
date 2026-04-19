@@ -250,7 +250,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
   return (
 <div className="flex h-full">
       <div className="w-64 border-r border-t dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 flex flex-col">
-        <div className="p-4 border-b bg-white dark:bg-zinc-900 flex justify-between items-center">
+        <div className="p-4 border-b border-t bg-white dark:bg-zinc-900 flex justify-between items-center">
           <h2 className="font-semibold">{t('chat.messages')}</h2>
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -295,7 +295,7 @@ className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transi
       <div className="flex-1 flex flex-col">
         {selectedContact ? (
           <>
-<div className="p-4 border-b bg-white dark:bg-zinc-900">
+<div className="p-4 border-b border-t bg-white dark:bg-zinc-900">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
                   {selectedContact.full_name.charAt(0).toUpperCase()}

@@ -213,13 +213,13 @@ export default function StudentDashboard() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gray-850">
-      <header className="bg-white shadow">
+return (
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900">
+      <header className="bg-white dark:bg-zinc-900 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('student.dashboard.studentDashboard')}</h1>
-            <p className="text-sm text-gray-600">{t('student.dashboard.welcome')}, {user?.fullName || user?.email}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('student.dashboard.studentDashboard')}</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('student.dashboard.welcome')}, {user?.fullName || user?.email}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowNotifications(true)} className="relative">
@@ -264,7 +264,7 @@ export default function StudentDashboard() {
         }} />
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 dark:text-white">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

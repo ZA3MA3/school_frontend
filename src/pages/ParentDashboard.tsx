@@ -169,12 +169,12 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-850">
-      <header className="bg-white shadow">
+<div className="min-h-screen bg-gray-50 dark:bg-zinc-900">
+      <header className="bg-white dark:bg-zinc-900 shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.parentDashboard')}</h1>
-            <p className="text-sm text-gray-600">{t('dashboard.welcome')}, {user?.fullName || user?.email}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('dashboard.parentDashboard')}</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">{t('dashboard.welcome')}, {user?.fullName || user?.email}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setShowNotifications(true)} className="relative">
@@ -187,7 +187,7 @@ export default function ParentDashboard() {
             </Button>
             <Button variant="outline" onClick={() => setShowChat(!showChat)} className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
-              {t('dashboard.chat')}
+              {t('chat.title')}
               {chatUnreadCount > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {chatUnreadCount > 9 ? '9+' : chatUnreadCount}
@@ -213,7 +213,7 @@ export default function ParentDashboard() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  {t('parent.dashboard.logout')}
+                  {t('dashboard.logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -221,8 +221,8 @@ export default function ParentDashboard() {
         </div>
       </header>
 
-      {showChat && (
-        <div className="fixed inset-0 z-50 bg-white" style={{ height: 'calc(100vh - 73px)', top: 73 }}>
+{showChat && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-zinc-900" style={{ height: 'calc(100vh - 73px)', top: 73 }}>
           <Chat 
             onClose={() => setShowChat(false)} 
             onUnreadCountChange={(count) => setChatUnreadCount(count)}
@@ -237,7 +237,7 @@ export default function ParentDashboard() {
         }} />
       )}
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={showChat ? { display: 'none' } : {}}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 dark:text-white" style={showChat ? { display: 'none' } : {}}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
