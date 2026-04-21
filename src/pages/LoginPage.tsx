@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthLoading as useAuthLoadingCheck } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,8 +25,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
+  const authLoading = useAuthLoadingCheck();
 
-  // Redirect if already authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }

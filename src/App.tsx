@@ -6,12 +6,22 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import TeacherDashboard from '@/pages/TeacherDashboard';
 import StudentDashboard from '@/pages/StudentDashboard';
 import ParentDashboard from '@/pages/ParentDashboard';
-import { useIsAuthenticated, useUserRole } from '@/stores/authStore';
+import { useIsAuthenticated, useUserRole, useAuthLoading } from '@/stores/authStore';
+import { Loader2 } from 'lucide-react';
 
 // Home component that redirects based on auth status and role
 function HomeRedirect() {
   const isAuthenticated = useIsAuthenticated();
   const role = useUserRole();
+  const isLoading = useAuthLoading();
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -36,16 +46,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Root - Landing Page */}
+       
         <Route path="/" element={<LandingPage />} />
         
-        {/* Dashboard Entry Point - redirects based on auth status */}
+       
         <Route path="/dashboard" element={<HomeRedirect />} />
         
-        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         
-        {/* Protected Routes */}
         <Route
           path="/admin"
           element={
@@ -79,7 +87,6 @@ function App() {
           }
         />
         
-        {/* Fallback for unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
@@ -87,3 +94,6 @@ function App() {
 }
 
 export default App
+
+
+

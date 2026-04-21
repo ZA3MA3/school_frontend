@@ -4,14 +4,24 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlayCircle, Users, BookOpen, MessageSquare, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useIsAuthenticated } from '@/stores/authStore';
+import { useIsAuthenticated, useAuthLoading } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import  TypeWriter  from '@/components/TypeWriter.tsx'
+import { Loader2 } from 'lucide-react';
 
 export default function LandingPage() {
   const isAuthenticated = useIsAuthenticated();
+  const isLoading = useAuthLoading();
   const { t, i18n } = useTranslation();
-  
+
+if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#171717]">
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+      </div>
+    );
+  }
+
   const [heroIndex, setHeroIndex] = useState(0);
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [contactName, setContactName] = useState('');
