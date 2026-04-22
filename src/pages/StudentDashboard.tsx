@@ -5,13 +5,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
 import { studentApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, LogOut, FileText, Download, CheckCircle, UserPlus, UserCheck, UserX, Bell } from 'lucide-react';
+import { Moon, Sun, LogOut, FileText, Download, CheckCircle, UserPlus, UserCheck, UserX, Bell, Search } from 'lucide-react';
 import { AxiosError } from 'axios';
 import Notifications from '@/components/Notifications';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
 
 interface Class {
   id: number;
@@ -19,7 +21,7 @@ interface Class {
   description: string;
   teacher: number;
   teacher_name: string;
-  students: Array<{ id: number; full_name: string }>;
+  students: Array<{ id: number; user_id: number; full_name: string }>;
   student_count: number;
 }
 
@@ -95,10 +97,23 @@ export default function StudentDashboard() {
   const [selectedExercise, setSelectedExercise] = useState<number | null>(null);
   const [submitFile, setSubmitFile] = useState<File | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [enrollmentFilter, setEnrollmentFilter] = useState<'all' | 'enrolled' | 'not_enrolled'>('all');
 
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (showSuggestions) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [showSuggestions]);
 
   const loadData = async () => {
     try {
@@ -110,6 +125,7 @@ export default function StudentDashboard() {
         studentApi.getAttendance(),
         studentApi.getSkills(),
       ]);
+      console.log(`[DEBUG] Fetched classesData length:`, classesData.length, `Data:`, classesData);
       setClasses(classesData);
       setExercises(exercisesData);
       setSubmissions(submissionsData);
@@ -124,14 +140,21 @@ export default function StudentDashboard() {
   };
 
   const handleEnroll = async (classId: number) => {
+    console.log(`[DEBUG] handleEnroll started for class ID: ${classId}`);
     setEnrolling(classId);
     try {
-      await studentApi.enrollInClass(classId);
-      loadData();
+      console.log(`[DEBUG] Calling studentApi.enrollInClass(${classId})...`);
+      const response = await studentApi.enrollInClass(classId);
+      console.log(`[DEBUG] studentApi.enrollInClass completed. Response:`, response);
+      
+      console.log(`[DEBUG] Calling loadData() to refresh classes...`);
+      await loadData();
+      console.log(`[DEBUG] loadData() completed.`);
     } catch (error) {
-      console.error('Error enrolling in class:', error);
+      console.error('[DEBUG] Error enrolling in class:', error);
       alert('Failed to enroll in class');
     } finally {
+      console.log(`[DEBUG] Clearing enrolling state for class ID: ${classId}`);
       setEnrolling(null);
     }
   };
@@ -199,10 +222,43 @@ export default function StudentDashboard() {
     return submissions.find((sub) => sub.exercise === exerciseId);
   };
 
-  const isEnrolled = (classId: number) => {
+const isEnrolled = (classId: number) => {
     const cls = classes.find((cls) => cls.id === classId);
     if (!cls) return false;
-    return cls.students.some((s) => s.id === (user?.id || 0));
+    
+    const enrolled = cls.students.some((s) => s.user_id === user?.id);
+    
+    // Adding debug log, throttling to only log when we are actively interacting with this class
+   // if (enrolling === classId || enrolled) {
+     //  console.log(`[DEBUG isEnrolled] Class ID ${classId} | User ID: ${user?.id} | Enrolled: ${enrolled}`);
+    //}
+    
+    return enrolled;
+  };
+
+  const filteredClasses = classes.filter((cls) => {
+    const query = searchQuery.toLowerCase();
+    if (query && !cls.name.toLowerCase().includes(query) && !cls.teacher_name.toLowerCase().includes(query)) {
+      return false;
+    }
+    const enrolled = isEnrolled(cls.id);
+    if (enrollmentFilter === 'enrolled' && !enrolled) return false;
+    if (enrollmentFilter === 'not_enrolled' && enrolled) return false;
+    return true;
+  });
+
+  const suggestions = searchQuery.length >= 1 
+    ? classes
+        .filter((cls) => 
+          cls.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          cls.teacher_name.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .slice(0, 4)
+    : [];
+
+  const handleSelectSuggestion = (cls: Class) => {
+    setSearchQuery(cls.name);
+    setShowSuggestions(false);
   };
 
   if (loading) {
@@ -241,11 +297,14 @@ return (
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-<DropdownMenuContent align="end">
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                   {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </DropdownMenuItem>
+                
+                <RoleSwitcher />
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -273,7 +332,7 @@ return (
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {classes.filter((cls) => cls.students.some(s => s.id === user?.id)).length}
+                {classes.filter((cls) => cls.students.some(s => s.user_id === user?.id)).length}
               </div>
               <p className="text-xs text-muted-foreground">Enrolled in</p>
             </CardContent>
@@ -333,58 +392,117 @@ return (
               {classes.length === 0 ? (
                 <p className="text-muted-foreground">No classes available yet</p>
               ) : (
-                <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                  {classes.map((cls) => {
-                    const enrolled = isEnrolled(cls.id);
-                    return (
-                      <div key={cls.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg">{cls.name}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              {cls.description || 'No description provided'}
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-2">
-                              <strong>Teacher:</strong> {cls.teacher_name}
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {cls.student_count} students enrolled
-                            </p>
-                            {enrolled && (
-                              <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full mt-2">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Enrolled
-                              </span>
-                            )}
+                <>
+                  <div className="relative mb-4">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by class name or teacher..."
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      className="pl-10 bg-white dark:bg-zinc-800"
+                    />
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-800 border rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {suggestions.map((cls) => (
+                          <div
+                            key={cls.id}
+                            onClick={() => handleSelectSuggestion(cls)}
+                            className="p-3 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer border-b last:border-b-0 dark:border-zinc-700"
+                          >
+                            <p className="font-medium">{cls.name}</p>
+                            <p className="text-sm text-muted-foreground">Teacher: {cls.teacher_name}</p>
                           </div>
-                          <div className="ml-4">
-                            {enrolled ? (
-                              <Button disabled size="sm">
-                                <CheckCircle className="h-4 w-4 mr-2" />
-                                Enrolled
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={() => handleEnroll(cls.id)}
-                                disabled={enrolling === cls.id}
-                                size="sm"
-                              >
-                                {enrolling === cls.id ? (
-                                  'Enrolling...'
-                                ) : (
-                                  <>
-                                    <UserPlus className="h-4 w-4 mr-2" />
-                                    Enroll
-                                  </>
-                                )}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
+                        ))}
                       </div>
-                    );
-                  })}
-                </div>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mb-4">
+                    <Button
+                      variant={enrollmentFilter === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setEnrollmentFilter('all')}
+                      className={enrollmentFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                    >
+                      All Classes
+                    </Button>
+                    <Button
+                      variant={enrollmentFilter === 'enrolled' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setEnrollmentFilter('enrolled')}
+                      className={enrollmentFilter === 'enrolled' ? 'bg-green-600 hover:bg-green-700' : ''}
+                    >
+                      Enrolled
+                    </Button>
+                    <Button
+                      variant={enrollmentFilter === 'not_enrolled' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setEnrollmentFilter('not_enrolled')}
+                      className={enrollmentFilter === 'not_enrolled' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                    >
+                      Not Enrolled
+                    </Button>
+                  </div>
+                  {filteredClasses.length === 0 ? (
+                    <p className="text-muted-foreground">No classes match your filters</p>
+                  ) : (
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                      {filteredClasses.map((cls) => {
+                        const enrolled = isEnrolled(cls.id);
+                        return (
+                          <div key={cls.id} className="p-4 border rounded-lg dark:border-zinc-700">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-lg">{cls.name}</h3>
+                                <p className="text-sm text-muted-foreground mt-1">
+                                  {cls.description || 'No description provided'}
+                                </p>
+                                <p className="text-sm text-muted-foreground mt-2">
+                                  <strong>Teacher:</strong> {cls.teacher_name}
+                                </p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {cls.student_count} students enrolled
+                                </p>
+                                {enrolled && (
+                                  <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full mt-2">
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                    Enrolled
+                                  </span>
+                                )}
+                              </div>
+                              <div className="ml-4">
+                                {enrolled ? (
+                                  <Button disabled size="sm">
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    Enrolled
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    onClick={() => handleEnroll(cls.id)}
+                                    disabled={enrolling === cls.id}
+                                    size="sm"
+                                  >
+                                    {enrolling === cls.id ? (
+                                      'Enrolling...'
+                                    ) : (
+                                      <>
+                                        <UserPlus className="h-4 w-4 mr-2" />
+                                        Enroll
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

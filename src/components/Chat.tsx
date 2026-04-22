@@ -30,7 +30,7 @@ interface ChatProps {
 
 export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const { user, activeRole } = useAuth();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -42,35 +42,48 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
 
-  const updateTotalUnread = useCallback((counts: Record<number, number>) => {
-    const total = Object.values(counts).reduce((sum, count) => sum + count, 0);
-    if (onUnreadCountChange) {
-      onUnreadCountChange(total);
-    }
-  }, [onUnreadCountChange]);
+  // Ref so WS message handler always reads the latest selectedContact
+  // without needing it as an effect dependency
+  const selectedContactRef = useRef<Contact | null>(null);
+  selectedContactRef.current = selectedContact;
+
+  // Ref so we can call the latest onUnreadCountChange inside effects/handlers
+  // without it becoming a dependency that causes re-runs
+  const onUnreadCountChangeRef = useRef(onUnreadCountChange);
+  onUnreadCountChangeRef.current = onUnreadCountChange;
+
+  // ✅ FIX: Sync total unread to parent in a dedicated effect.
+  // Previously, onUnreadCountChange (parent setState) was called INSIDE a child
+  // setState callback, which React forbids and caused the warning:
+  // "Cannot update a component while rendering a different component".
+  // Now unreadCounts is the single source of truth, and this effect
+  // propagates the total upward after every change — safely, outside render.
+  useEffect(() => {
+    const total = Object.values(unreadCounts).reduce((sum, c) => sum + c, 0);
+    onUnreadCountChangeRef.current?.(total);
+  }, [unreadCounts]);
 
   const loadUnreadCounts = useCallback(async () => {
     try {
-      const data = await chatApi.getUnreadCounts();
+      const data = await chatApi.getUnreadCounts(activeRole || undefined);
+      // Just set state — the effect above will sync the total to the parent
       setUnreadCounts(data.contact_counts || {});
-      if (onUnreadCountChange) {
-        onUnreadCountChange(data.total_unread || 0);
-      }
     } catch (error) {
       console.error('Error loading unread counts:', error);
     }
-  }, [onUnreadCountChange]);
+  }, [activeRole]);
 
-  const loadContacts = async () => {
+  const loadContacts = useCallback(async () => {
     try {
-      const data = await chatApi.getContacts();
+      setLoading(true);
+      const data = await chatApi.getContacts(activeRole || undefined);
       setContacts(data);
     } catch (error) {
       console.error('Error loading contacts:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeRole]);
 
   const loadMessages = async (contactId: number) => {
     try {
@@ -89,6 +102,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
     setWsConnected(false);
   };
 
+  // Initial load
   useEffect(() => {
     loadContacts();
     loadUnreadCounts();
@@ -97,81 +111,106 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
         wsRef.current.close();
       }
     };
-  }, [loadUnreadCounts]);
+  }, [loadContacts, loadUnreadCounts]);
 
+  // WebSocket lifecycle.
+  // Only depends on primitive IDs — not objects or functions — so it never
+  // re-runs due to reference changes, which was the original infinite loop cause.
   useEffect(() => {
-    if (selectedContact) {
-      loadMessages(selectedContact.id);
-      setUnreadCounts(prev => {
-        const newCounts = { ...prev };
-        delete newCounts[selectedContact.id];
-        updateTotalUnread(newCounts);
-        return newCounts;
-      });
-      
-      const connectWs = async () => {
-        disconnectWebSocket();
-        try {
-          const ticket = await chatApi.getWsTicket();
-          const ws = new WebSocket(`ws://localhost:8000/ws/chat/?ticket=${ticket}`);
-          
-          ws.onopen = () => {
-            console.log('WebSocket connected');
-            setWsConnected(true);
-          };
-          
-          ws.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-              
-              if (data.type === 'message_sent' || data.type === 'new_message') {
-                const msg = data.message;
-             
-                const condition1 = (msg.sender === user?.id && msg.receiver === selectedContact.id);
-                const condition2 = (msg.sender === selectedContact.id && msg.receiver === user?.id);
-              
-                const isForThisConversation = condition1 || condition2;
-              
-                if (isForThisConversation) {
-                  setMessages((prev) => {
-                    const exists = prev.some((m) => m.id === msg.id);
-                    if (exists) return prev;
-                    return [...prev, msg];
-                  });
-                } else if (msg.receiver === user?.id) {
-                  setUnreadCounts(prev => {
-                    const newCounts = { ...prev, [msg.sender]: (prev[msg.sender] || 0) + 1 };
-                    updateTotalUnread(newCounts);
-                    return newCounts;
-                  });
-                }
-              }
-            } catch (e) {
-              console.error('Error parsing WebSocket message:', e);
-            }
-          };
-          
-          ws.onerror = (error) => {
-            console.error('WebSocket error:', error);
-            setWsConnected(false);
-          };
-          
-          ws.onclose = () => {
-            console.log('WebSocket disconnected');
-            setWsConnected(false);
-          };
-          
-          wsRef.current = ws;
-        } catch (error) {
-          console.error('Failed to get WebSocket ticket:', error);
-        }
-      };
-      connectWs();
-    } else {
+    if (!selectedContact) {
       disconnectWebSocket();
+      return;
     }
-    return () => disconnectWebSocket();
-  }, [selectedContact, user?.id, updateTotalUnread]);
+
+    loadMessages(selectedContact.id);
+
+    // ✅ Plain setState with no parent call inside the callback.
+    // The dedicated sync effect above handles notifying the parent.
+    setUnreadCounts(prev => {
+      const next = { ...prev };
+      delete next[selectedContact.id];
+      return next;
+    });
+
+    // cancelled flag: if cleanup runs before the async ticket fetch resolves
+    // (StrictMode double-invoke, or user switches contacts rapidly),
+    // we discard the stale ticket rather than opening a zombie WebSocket.
+    let cancelled = false;
+
+    const connectWs = async () => {
+      disconnectWebSocket();
+      try {
+        // Delay outlasts StrictMode's mount→unmount→remount cycle so the
+        // first (discarded) mount's cleanup can set cancelled=true before
+        // we consume a one-time ticket from the server.
+        await new Promise(resolve => setTimeout(resolve, 150));
+        if (cancelled) return;
+
+        const ticket = await chatApi.getWsTicket();
+        if (cancelled) return;
+
+        const ws = new WebSocket(`ws://localhost:8000/ws/chat/?ticket=${ticket}`);
+
+        ws.onopen = () => {
+          if (cancelled) { ws.close(); return; }
+          console.log('WebSocket connected');
+          setWsConnected(true);
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'message_sent' || data.type === 'new_message') {
+              const msg = data.message;
+              const contact = selectedContactRef.current;
+              const currentUserId = user?.id;
+
+              const isForThisConversation =
+                (msg.sender === currentUserId && msg.receiver === contact?.id) ||
+                (msg.sender === contact?.id && msg.receiver === currentUserId);
+
+              if (isForThisConversation) {
+                setMessages(prev => {
+                  if (prev.some(m => m.id === msg.id)) return prev;
+                  return [...prev, msg];
+                });
+              } else if (msg.receiver === currentUserId) {
+                // ✅ Just update state — sync effect notifies parent automatically
+                setUnreadCounts(prev => ({
+                  ...prev,
+                  [msg.sender]: (prev[msg.sender] || 0) + 1,
+                }));
+              }
+            }
+          } catch (e) {
+            console.error('Error parsing WebSocket message:', e);
+          }
+        };
+
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+          setWsConnected(false);
+        };
+
+        ws.onclose = () => {
+          console.log('WebSocket disconnected');
+          setWsConnected(false);
+        };
+
+        wsRef.current = ws;
+      } catch (error) {
+        console.error('Failed to get WebSocket ticket:', error);
+      }
+    };
+
+    connectWs();
+
+    return () => {
+      cancelled = true;
+      disconnectWebSocket();
+    };
+  }, [selectedContact?.id, user?.id]); // ✅ primitives only — no function deps
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -248,7 +287,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
   }
 
   return (
-<div className="flex h-full">
+    <div className="flex h-full">
       <div className="w-64 border-r border-t dark:border-zinc-800 bg-gray-50 dark:bg-zinc-900 flex flex-col">
         <div className="p-4 border-b border-t bg-white dark:bg-zinc-900 flex justify-between items-center">
           <h2 className="font-semibold">{t('chat.messages')}</h2>
@@ -266,8 +305,10 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
               <button
                 key={contact.id}
                 onClick={() => setSelectedContact(contact)}
-className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors border-b ${
-                  selectedContact?.id === contact.id ? 'bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500' : ''
+                className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors border-b ${
+                  selectedContact?.id === contact.id
+                    ? 'bg-blue-50 dark:bg-blue-950 border-l-4 border-l-blue-500'
+                    : ''
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -295,7 +336,7 @@ className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transi
       <div className="flex-1 flex flex-col">
         {selectedContact ? (
           <>
-<div className="p-4 border-b border-t bg-white dark:bg-zinc-900">
+            <div className="p-4 border-b border-t bg-white dark:bg-zinc-900">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
                   {selectedContact.full_name.charAt(0).toUpperCase()}
@@ -304,8 +345,7 @@ className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transi
                   <p className="font-semibold">{selectedContact.full_name}</p>
                   <p className="text-xs text-muted-foreground dark:text-gray-400">
                     {selectedContact.role}
-                 
-                  {` • ${wsConnected ? t('chat.connected') : t('chat.connecting')}`}
+                    {` • ${wsConnected ? t('chat.connected') : t('chat.connecting')}`}
                   </p>
                 </div>
               </div>
@@ -314,7 +354,7 @@ className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transi
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {Object.entries(groupMessagesByDate(messages)).map(([dateKey, msgs]) => (
                 <div key={dateKey}>
-<div className="flex items-center gap-4 my-4">
+                  <div className="flex items-center gap-4 my-4">
                     <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-700"></div>
                     <span className="text-xs text-muted-foreground">{formatDate(dateKey)}</span>
                     <div className="flex-1 h-px bg-gray-200 dark:bg-zinc-700"></div>
@@ -326,7 +366,7 @@ className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transi
                         msg.sender === user?.id ? 'justify-end' : 'justify-start'
                       }`}
                     >
-<div
+                      <div
                         className={`max-w-[70%] rounded-lg px-4 py-2 ${
                           msg.sender === user?.id
                             ? 'bg-blue-500 text-white'
@@ -336,7 +376,9 @@ className={`w-full p-4 text-left hover:bg-gray-100 dark:hover:bg-zinc-800 transi
                         <p className="text-sm">{msg.content}</p>
                         <p
                           className={`text-xs mt-1 ${
-                            msg.sender === user?.id ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'
+                            msg.sender === user?.id
+                              ? 'text-blue-100'
+                              : 'text-gray-500 dark:text-gray-400'
                           }`}
                         >
                           {formatTime(msg.created_at)}

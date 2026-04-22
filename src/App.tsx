@@ -6,19 +6,19 @@ import AdminDashboard from '@/pages/AdminDashboard';
 import TeacherDashboard from '@/pages/TeacherDashboard';
 import StudentDashboard from '@/pages/StudentDashboard';
 import ParentDashboard from '@/pages/ParentDashboard';
-import { useIsAuthenticated, useUserRole } from '@/stores/authStore';
+import { useIsAuthenticated, useActiveRole } from '@/stores/authStore';
 
-// Home component that redirects based on auth status and role
+// Home component that redirects based on auth status and activeRole
 function HomeRedirect() {
   const isAuthenticated = useIsAuthenticated();
-  const role = useUserRole();
+  const activeRole = useActiveRole();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  // Redirect to role-specific dashboard
-  switch (role) {
+  // Redirect to active-role dashboard
+  switch (activeRole) {
     case 'ADMIN':
       return <Navigate to="/admin" replace />;
     case 'TEACHER':

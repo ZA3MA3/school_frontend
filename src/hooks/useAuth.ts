@@ -7,7 +7,7 @@ import {
   useIsAuthenticated, 
   useAuthLoading, 
   useAuthError,
-  useUserRole,
+  useActiveRole,
   type UserRole 
 } from '@/stores/authStore';
 import { authApi } from '@/lib/api';
@@ -21,7 +21,7 @@ export function useAuth() {
   const isAuthenticated = useIsAuthenticated();
   const isLoading = useAuthLoading();
   const error = useAuthError();
-  const role = useUserRole();
+  const activeRole = useActiveRole();
   
   // Get actions from store
   const store = useAuthStore();
@@ -42,11 +42,13 @@ export function useAuth() {
         firstName: data.user?.first_name,
         lastName: data.user?.last_name,
         fullName: data.user?.full_name,
-        role: data.role,
+        roles: data.roles || [], // Backend now returns 'roles' array
       });
       
-      // Redirect based on role
-      switch (data.role) {
+      // Redirect based on active role (set by store.login logic)
+      const currentActiveRole = useAuthStore.getState().activeRole;
+      
+      switch (currentActiveRole) {
         case 'ADMIN':
           navigate('/admin');
           break;
@@ -102,45 +104,73 @@ export function useAuth() {
     }
   }, [navigate, store]);
   
-  // Check if user has specific role
+  // Check if user has specific role in their roles array (for authorization)
   const hasRole = useCallback((requiredRole: UserRole | UserRole[]): boolean => {
-    if (!role) return false;
+    if (!user || !user.roles) return false;
     if (Array.isArray(requiredRole)) {
-      return requiredRole.includes(role);
+      return requiredRole.some(r => user.roles.includes(r));
     }
-    return role === requiredRole;
-  }, [role]);
+    return user.roles.includes(requiredRole);
+  }, [user]);
+
+  // Check if current active role matches (for UI filtering)
+  const isActiveRole = useCallback((role: UserRole): boolean => {
+    return activeRole === role;
+  }, [activeRole]);
+
+  // Switch active role
+  const switchRole = useCallback((role: UserRole) => {
+    if (user?.roles.includes(role)) {
+      store.setActiveRole(role);
+      // Navigate to corresponding dashboard
+      switch (role) {
+        case 'ADMIN': navigate('/admin'); break;
+        case 'TEACHER': navigate('/teacher'); break;
+        case 'STUDENT': navigate('/student'); break;
+        case 'PARENT': navigate('/parent'); break;
+      }
+    }
+  }, [user, store, navigate]);
   
-  // Check if user is admin
-  const isAdmin = role === 'ADMIN';
-  
-  // Check if user is teacher
-  const isTeacher = role === 'TEACHER';
-  
-  // Check if user is student
-  const isStudent = role === 'STUDENT';
-  
-  // Check if user is parent
-  const isParent = role === 'PARENT';
+  // Active role checks (for UI context)
+  const isAdmin = activeRole === 'ADMIN';
+  const isTeacher = activeRole === 'TEACHER';
+  const isStudent = activeRole === 'STUDENT';
+  const isParent = activeRole === 'PARENT';
+
+  // Permission checks (checks if user has the role at all)
+  const canBeAdmin = user?.roles.includes('ADMIN');
+  const canBeTeacher = user?.roles.includes('TEACHER');
+  const canBeStudent = user?.roles.includes('STUDENT');
+  const canBeParent = user?.roles.includes('PARENT');
   
   return {
     // State
     user,
-    role,
+    role: activeRole, // Keeping 'role' name for compatibility
+    activeRole,
     isAuthenticated,
     isLoading,
     error,
     
-    // Role checks
+    // Active role checks
     isAdmin,
     isTeacher,
     isStudent,
     isParent,
+
+    // Permission checks
+    canBeAdmin,
+    canBeTeacher,
+    canBeStudent,
+    canBeParent,
     hasRole,
+    isActiveRole,
     
     // Actions
     login,
     logout,
+    switchRole,
     clearError: store.clearError,
   };
 }
@@ -159,8 +189,18 @@ export function useAuthCheck() {
     
     try {
       // Try to get current user - this will fail if cookie is missing/invalid
-      const user = await authApi.getCurrentUser();
-      store.login(user);
+      const userData = await authApi.getCurrentUser();
+      
+      // Update store with data from backend
+      store.login({
+        id: userData.id,
+        email: userData.email,
+        firstName: userData.first_name,
+        lastName: userData.last_name,
+        fullName: userData.full_name,
+        roles: userData.roles || [],
+      });
+      
       return true;
     } catch {
       // Not authenticated

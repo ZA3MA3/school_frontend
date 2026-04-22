@@ -11,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, BookOpen, LogOut, Upload, FileText, Clock, Download, CheckCircle, Star, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
+import { Moon, Sun, BookOpen, LogOut, FileText, Clock, Download, CheckCircle, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
 
 interface Class {
   id: number;
@@ -88,7 +89,6 @@ export default function TeacherDashboard() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadClassId, setUploadClassId] = useState('');
@@ -115,8 +115,6 @@ export default function TeacherDashboard() {
   const [announcementContent, setAnnouncementContent] = useState('');
   const [announcementClassId, setAnnouncementClassId] = useState('');
   const [isPosting, setIsPosting] = useState(false);
-  const [showAnnouncementForm, setShowAnnouncementForm] = useState(false);
-  const [showAttendanceForm, setShowAttendanceForm] = useState(false);
   const [attendanceClassId, setAttendanceClassId] = useState('');
   const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
   const [attendanceRecords, setAttendanceRecords] = useState<Record<number, 'PRESENT' | 'ABSENT'>>({});
@@ -170,26 +168,22 @@ export default function TeacherDashboard() {
       formData.append('related_class', uploadClassId);
       formData.append('file_path', uploadFile);
       
-      // Only append due_date if it's provided
       if (uploadDueDate) {
         formData.append('due_date', uploadDueDate);
       }
       
-      // Append skills
       selectedSkills.forEach(skillId => {
         formData.append('skills', skillId.toString());
       });
 
       await teacherApi.createExercise(formData);
       
-      // Reset form and reload exercises
       setUploadTitle('');
       setUploadDescription('');
       setUploadClassId('');
       setUploadFile(null);
       setUploadDueDate('');
       setSelectedSkills([]);
-      setShowUploadForm(false);
       loadData();
     } catch (error) {
       console.error('Error uploading file:', error);
@@ -242,7 +236,6 @@ export default function TeacherDashboard() {
       setAnnouncementTitle('');
       setAnnouncementContent('');
       setAnnouncementClassId('');
-      setShowAnnouncementForm(false);
       loadData();
     } catch (error) {
       console.error('Error creating announcement:', error);
@@ -282,7 +275,6 @@ export default function TeacherDashboard() {
       }));
       
       await teacherApi.markAttendance(records);
-      //alert('Attendance saved successfully!');
       handleLoadAttendance();
     } catch (error) {
       console.error('Error saving attendance:', error);
@@ -331,11 +323,14 @@ return (
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-<DropdownMenuContent align="end">
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                   {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </DropdownMenuItem>
+                
+                <RoleSwitcher />
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />
@@ -798,7 +793,7 @@ return (
           <Card>
             <CardHeader>
               <CardTitle>Student Submissions</CardTitle>
-              <CardDescription>Download and review student submissions</CardDescription>
+              <CardDescription>Review and grade work from your students</CardDescription>
             </CardHeader>
             <CardContent>
               {submissions.length === 0 ? (
@@ -806,44 +801,28 @@ return (
               ) : (
                 <div className="space-y-4">
                   {submissions.map((submission) => (
-                    <div key={submission.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="font-medium">{submission.exercise_title}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Student: {submission.student_name}
+                    <div key={submission.id} className="p-4 border rounded-lg flex justify-between items-center">
+                      <div>
+                        <h3 className="font-medium">{submission.student_name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Exercise: {submission.exercise_title} | Submitted: {new Date(submission.submitted_at).toLocaleDateString()}
+                        </p>
+                        {submission.grade !== null && (
+                          <p className="text-sm text-green-600 font-medium mt-1">
+                            Grade: {submission.grade}/20
                           </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Submitted: {new Date(submission.submitted_at).toLocaleString()}
-                          </p>
-                          {submission.grade !== null && (
-                            <p className="text-sm mt-1">
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs">
-                                Grade: {submission.grade}/20
-                              </span>
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          {submission.submission_file_url && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => window.open(teacherApi.downloadSubmission(submission.id), '_blank')}
-                            >
-                              <Download className="h-4 w-4 mr-2" />
-                              Download
-                            </Button>
-                          )}
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => openGradingDialog(submission)}
-                          >
-                            <Star className="h-4 w-4 mr-2" />
-                            Grade
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {submission.submission_file_url && (
+                          <Button variant="outline" size="sm" onClick={() => window.open(teacherApi.downloadSubmission(submission.id), '_blank')}>
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
                           </Button>
-                        </div>
+                        )}
+                        <Button size="sm" onClick={() => openGradingDialog(submission)}>
+                          {submission.grade !== null ? 'Re-grade' : 'Grade'}
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -852,68 +831,51 @@ return (
             </CardContent>
           </Card>
         )}
-
-        {/* Grading Dialog */}
-        {gradingSubmission && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-            <Card className="max-w-md w-full mx-4">
-              <CardHeader>
-                <CardTitle>Grade Submission</CardTitle>
-                <CardDescription>
-                  Enter grade (out of 20) and feedback for the student
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="grade">Grade (out of 20)</Label>
-                    <Input
-                      id="grade"
-                      type="number"
-                      min="0"
-                      max="20"
-                      step="0.5"
-                      value={gradeValue}
-                      onChange={(e) => setGradeValue(e.target.value)}
-                      placeholder="e.g., 15"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="feedback">Feedback</Label>
-                    <textarea
-                      id="feedback"
-                      value={feedbackText}
-                      onChange={(e) => setFeedbackText(e.target.value)}
-                      placeholder="Enter feedback for the student..."
-                      className="w-full p-2 border rounded-md min-h-[100px]"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleGrade}
-                      disabled={!gradeValue || isGrading}
-                      className="flex-1"
-                    >
-                      {isGrading ? 'Saving...' : 'Save Grade'}
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setGradingSubmission(null);
-                        setGradeValue('');
-                        setFeedbackText('');
-                      }}
-                      variant="outline"
-                      className="flex-1"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </main>
+
+      {gradingSubmission && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <Card className="max-w-md w-full mx-4">
+            <CardHeader>
+              <CardTitle>Grade Submission</CardTitle>
+              <CardDescription>Provide a grade and feedback for the student</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="grade">Grade (0-20)</Label>
+                  <Input
+                    id="grade"
+                    type="number"
+                    min="0"
+                    max="20"
+                    step="0.5"
+                    value={gradeValue}
+                    onChange={(e) => setGradeValue(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="feedback">Feedback</Label>
+                  <textarea
+                    id="feedback"
+                    value={feedbackText}
+                    onChange={(e) => setFeedbackText(e.target.value)}
+                    className="w-full p-2 border rounded-md min-h-[100px]"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleGrade} disabled={isGrading} className="flex-1">
+                    {isGrading ? 'Saving...' : 'Save Grade'}
+                  </Button>
+                  <Button onClick={() => setGradingSubmission(null)} variant="outline" className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

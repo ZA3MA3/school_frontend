@@ -164,7 +164,9 @@ export const teacherApi = {
 export const studentApi = {
   // Get all available classes
   getAllClasses: async () => {
-    const response = await apiClient.get('/users/classes/');
+    const response = await apiClient.get('/users/classes/', {
+      params: { _t: new Date().getTime() }
+    });
     return response.data;
   },
   
@@ -257,8 +259,10 @@ export const parentApi = {
 // Chat API functions
 export const chatApi = {
   // Get contacts (teachers for parents, parents for teachers)
-  getContacts: async () => {
-    const response = await apiClient.get('/users/chat/contacts/');
+  getContacts: async (role?: string) => {
+    const response = await apiClient.get('/users/chat/contacts/', {
+      params: role ? { role } : undefined
+    });
     return response.data;
   },
   
@@ -283,8 +287,10 @@ export const chatApi = {
   },
   
   // Get unread message counts
-  getUnreadCounts: async () => {
-    const response = await apiClient.get('/users/chat/unread-count/');
+  getUnreadCounts: async (role?: string) => {
+    const response = await apiClient.get('/users/chat/unread-count/', {
+      params: role ? { role } : undefined
+    });
     return response.data;
   },
 };

@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX } from 'lucide-react';
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
 
 interface Student {
   id: number;
@@ -109,11 +110,6 @@ export default function ParentDashboard() {
       setPredictions(prev => ({ ...prev, [studentId]: result }));
     } catch (error: any) {
       console.error('Error predicting:', error);
-      console.error('Error response:', error.response);
-      console.error('Error message:', error.message);
-      if (error.response?.data) {
-        console.error('Server error data:', error.response.data);
-      }
       alert('Failed to get prediction: ' + (error.response?.data?.detail || error.message));
     } finally {
       setPredicting(null);
@@ -205,11 +201,14 @@ export default function ParentDashboard() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-<DropdownMenuContent align="end">
+              <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
                   {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </DropdownMenuItem>
+                
+                <RoleSwitcher />
+                
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   <LogOut className="mr-2 h-4 w-4" />

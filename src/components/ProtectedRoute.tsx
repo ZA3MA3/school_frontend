@@ -13,7 +13,7 @@ export default function ProtectedRoute({
   allowedRoles,
   requireAuth = true 
 }: ProtectedRouteProps) {
-  const { isAuthenticated, role, isLoading } = useAuth();
+  const { isAuthenticated, activeRole, user, isLoading } = useAuth();
   const location = useLocation();
 
   // Show loading spinner while checking auth
@@ -31,19 +31,33 @@ export default function ProtectedRoute({
   }
 
   // Check role authorization
-  if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Redirect to appropriate dashboard based on role
-    switch (role) {
-      case 'ADMIN':
-        return <Navigate to="/admin" replace />;
-      case 'TEACHER':
-        return <Navigate to="/teacher" replace />;
-      case 'STUDENT':
-        return <Navigate to="/student" replace />;
-      case 'PARENT':
-        return <Navigate to="/parent" replace />;
-      default:
-        return <Navigate to="/login" replace />;
+  // We check if the user HAS the role in their roles array
+  // And also if the current active role is allowed for this route
+  // If the user HAS the role but it's not active, we might want to automatically switch it or redirect
+  if (allowedRoles && user) {
+    const hasRequiredRole = allowedRoles.some(role => user.roles.includes(role));
+    
+    if (!hasRequiredRole) {
+      // User doesn't have any of the required roles at all
+      return <Navigate to="/" replace />;
+    }
+
+    // User has the role, but is it the active one?
+    // For specific dashboards, we usually want the active role to match
+    if (activeRole && !allowedRoles.includes(activeRole)) {
+      // Redirect to the correct dashboard for the active role
+      switch (activeRole) {
+        case 'ADMIN':
+          return <Navigate to="/admin" replace />;
+        case 'TEACHER':
+          return <Navigate to="/teacher" replace />;
+        case 'STUDENT':
+          return <Navigate to="/student" replace />;
+        case 'PARENT':
+          return <Navigate to="/parent" replace />;
+        default:
+          return <Navigate to="/login" replace />;
+      }
     }
   }
 

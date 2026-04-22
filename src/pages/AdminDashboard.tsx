@@ -2,10 +2,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { RequireAdmin, RequireRole, RoleSwitch } from '@/components/RoleBased';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, BookOpen, Settings, BarChart3, LogOut, Bell } from 'lucide-react';
+import { Users, BookOpen, Settings, BarChart3, LogOut, Bell, Sun, Moon } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { useTheme } from 'next-themes';
+import { RoleSwitcher } from '@/components/RoleSwitcher';
+
 
 export default function AdminDashboard() {
   const { logout, user } = useAuth();
+  const { theme, setTheme } = useTheme();
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -17,10 +24,29 @@ export default function AdminDashboard() {
           </div>
           <div className="flex items-center gap-4">
             <Bell className="h-5 w-5 text-gray-600 cursor-pointer" />
-            <Button variant="outline" onClick={logout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-full h-10 w-10 p-0">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback>{user?.fullName?.charAt(0) || user?.email?.charAt(0) || 'A'}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
+                  {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                  {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+                </DropdownMenuItem>
+                
+                <RoleSwitcher />
+                
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>

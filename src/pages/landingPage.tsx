@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlayCircle, Users, BookOpen, MessageSquare, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
+import { Users, BookOpen, MessageSquare, ChevronLeft, ChevronRight, ArrowUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useIsAuthenticated } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
