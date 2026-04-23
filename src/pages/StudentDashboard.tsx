@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, LogOut, FileText, Download, CheckCircle, UserPlus, UserCheck, UserX, Bell, Search } from 'lucide-react';
+import { Moon, Sun, LogOut, FileText, Download, CheckCircle, UserPlus, UserCheck, UserX, Bell, Search, Clock } from 'lucide-react';
 import { AxiosError } from 'axios';
 import Notifications from '@/components/Notifications';
 import { RoleSwitcher } from '@/components/RoleSwitcher';
@@ -23,6 +23,11 @@ interface Class {
   teacher_name: string;
   students: Array<{ id: number; user_id: number; full_name: string }>;
   student_count: number;
+  enrollment_status: {
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+    requested_at: string | null;
+    responded_at: string | null;
+  } | null;
 }
 
 interface Skill {
@@ -226,14 +231,15 @@ const isEnrolled = (classId: number) => {
     const cls = classes.find((cls) => cls.id === classId);
     if (!cls) return false;
     
-    const enrolled = cls.students.some((s) => s.user_id === user?.id);
-    
-    // Adding debug log, throttling to only log when we are actively interacting with this class
-   // if (enrolling === classId || enrolled) {
-     //  console.log(`[DEBUG isEnrolled] Class ID ${classId} | User ID: ${user?.id} | Enrolled: ${enrolled}`);
-    //}
-    
-    return enrolled;
+    // Check enrollment_status from backend
+    if (cls.enrollment_status?.status === 'APPROVED') return true;
+    // Check legacy students array
+    return cls.students.some((s) => s.user_id === user?.id);
+  };
+
+  const getEnrollmentStatus = (classId: number) => {
+    const cls = classes.find((cls) => cls.id === classId);
+    return cls?.enrollment_status?.status || null;
   };
 
   const filteredClasses = classes.filter((cls) => {
@@ -242,8 +248,9 @@ const isEnrolled = (classId: number) => {
       return false;
     }
     const enrolled = isEnrolled(cls.id);
+    const status = getEnrollmentStatus(cls.id);
     if (enrollmentFilter === 'enrolled' && !enrolled) return false;
-    if (enrollmentFilter === 'not_enrolled' && enrolled) return false;
+    if (enrollmentFilter === 'not_enrolled' && (enrolled || status === 'PENDING')) return false;
     return true;
   });
 
@@ -449,9 +456,10 @@ return (
                   {filteredClasses.length === 0 ? (
                     <p className="text-muted-foreground">No classes match your filters</p>
                   ) : (
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+<div className="space-y-4 max-h-[400px] overflow-y-auto">
                       {filteredClasses.map((cls) => {
                         const enrolled = isEnrolled(cls.id);
+                        const enrollmentStatus = getEnrollmentStatus(cls.id);
                         return (
                           <div key={cls.id} className="p-4 border rounded-lg dark:border-zinc-700">
                             <div className="flex justify-between items-start">
@@ -472,12 +480,36 @@ return (
                                     Enrolled
                                   </span>
                                 )}
+                                {enrollmentStatus === 'PENDING' && (
+                                  <span className="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full mt-2">
+                                    Pending
+                                  </span>
+                                )}
+                                {enrollmentStatus === 'REJECTED' && (
+                                  <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full mt-2">
+                                    Rejected - Can Resubmit
+                                  </span>
+                                )}
                               </div>
                               <div className="ml-4">
                                 {enrolled ? (
                                   <Button disabled size="sm">
                                     <CheckCircle className="h-4 w-4 mr-2" />
                                     Enrolled
+                                  </Button>
+                                ) : enrollmentStatus === 'PENDING' ? (
+                                  <Button disabled size="sm" variant="outline" className="opacity-50 cursor-not-allowed">
+                                    <Clock className="h-4 w-4 mr-2" />
+                                    Pending...
+                                  </Button>
+                                ) : enrollmentStatus === 'REJECTED' ? (
+                                  <Button
+                                    onClick={() => handleEnroll(cls.id)}
+                                    disabled={enrolling === cls.id}
+                                    size="sm"
+                                    variant="destructive"
+                                  >
+                                    {enrolling === cls.id ? 'Resending...' : 'Resend Request'}
                                   </Button>
                                 ) : (
                                   <Button
@@ -486,11 +518,11 @@ return (
                                     size="sm"
                                   >
                                     {enrolling === cls.id ? (
-                                      'Enrolling...'
+                                      'Requesting...'
                                     ) : (
                                       <>
                                         <UserPlus className="h-4 w-4 mr-2" />
-                                        Enroll
+                                        Request Enrollment
                                       </>
                                     )}
                                   </Button>

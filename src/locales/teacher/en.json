@@ -17,7 +17,8 @@
     "exercises": "Exercises",
     "announcements": "Announcements",
     "attendance": "Attendance",
-    "submissions": "Submissions"
+    "submissions": "Submissions",
+    "enrollments":"Enrollments"
   },
   "classes": {
     "noClasses": "No classes assigned yet",

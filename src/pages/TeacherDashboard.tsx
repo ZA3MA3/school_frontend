@@ -24,6 +24,18 @@ interface Class {
   students?: Array<{ id: number; full_name: string }>;
 }
 
+interface EnrollmentRequest {
+  id: number;
+  student: number;
+  student_name: string;
+  class_obj: number;
+  class_name: string;
+  teacher_name: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  requested_at: string;
+  responded_at: string | null;
+}
+
 interface Skill {
   id: number;
   name: string;
@@ -75,6 +87,7 @@ interface AttendanceRecord {
 
 const TABS = [
   { id: 'my-classes', labelKey: 'teacher.tabs.myClasses' },
+  { id: 'enrollments', labelKey: 'teacher.tabs.enrollments' },
   { id: 'mark-attendance', labelKey: 'teacher.tabs.attendance' },
   { id: 'create-announcement', labelKey: 'teacher.tabs.announcements' },
   { id: 'upload-exercise', labelKey: 'teacher.tabs.exercises' },
@@ -89,6 +102,8 @@ export default function TeacherDashboard() {
   const [classes, setClasses] = useState<Class[]>([]);
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [enrollments, setEnrollments] = useState<EnrollmentRequest[]>([]);
+  const [respondingEnrollment, setRespondingEnrollment] = useState<number | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadClassId, setUploadClassId] = useState('');
@@ -137,22 +152,37 @@ export default function TeacherDashboard() {
 
   const loadData = async () => {
     try {
-      const [classesData, exercisesData, submissionsData, announcementsData, skillsData] = await Promise.all([
+      const [classesData, exercisesData, submissionsData, announcementsData, skillsData, enrollmentsData] = await Promise.all([
         teacherApi.getClasses(),
         teacherApi.getExercises(),
         teacherApi.getSubmissions(),
         teacherApi.getAnnouncements(),
         teacherApi.getSkills(),
+        teacherApi.getEnrollments(),
       ]);
       setClasses(classesData);
       setExercises(exercisesData);
       setSubmissions(submissionsData);
       setAnnouncements(announcementsData);
       setSkills(skillsData);
+      setEnrollments(enrollmentsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleRespondToEnrollment = async (enrollmentId: number, action: 'approve' | 'reject') => {
+    setRespondingEnrollment(enrollmentId);
+    try {
+      await teacherApi.respondToEnrollment(enrollmentId, action);
+      loadData();
+    } catch (error) {
+      console.error('Error responding to enrollment:', error);
+      alert('Failed to respond to enrollment');
+    } finally {
+      setRespondingEnrollment(null);
     }
   };
 
@@ -452,6 +482,54 @@ return (
                       <p className="text-xs text-muted-foreground mt-2">
                         {cls.student_count} students enrolled
                       </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'enrollments' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Enrollment Requests</CardTitle>
+              <CardDescription>Students requesting to join your classes</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {enrollments.length === 0 ? (
+                <p className="text-muted-foreground">No pending enrollment requests</p>
+              ) : (
+                <div className="space-y-4">
+                  {enrollments.map((enrollment) => (
+                    <div key={enrollment.id} className="p-4 border rounded-lg dark:border-zinc-700">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{enrollment.student_name}</h3>
+                          <p className="text-sm text-muted-foreground">Wants to join: {enrollment.class_name}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Requested: {new Date(enrollment.requested_at).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleRespondToEnrollment(enrollment.id, 'approve')}
+                            disabled={respondingEnrollment === enrollment.id}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRespondToEnrollment(enrollment.id, 'reject')}
+                            disabled={respondingEnrollment === enrollment.id}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

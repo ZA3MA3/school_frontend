@@ -17,7 +17,8 @@
   "exercises": "التمارين",
   "announcements": "الإعلانات",
   "attendance": "الحضور",
-  "submissions": "التسليمات"
+  "submissions": "التسليمات",
+  "enrollments":"التسجيلات"
 },
 "common": {
   "loading": "جاري التحميل...",

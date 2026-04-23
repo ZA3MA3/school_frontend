@@ -87,6 +87,21 @@ export const teacherApi = {
     return response.data;
   },
   
+  // Get pending enrollment requests
+  getEnrollments: async () => {
+    const response = await apiClient.get('/users/teacher/enrollments/');
+    return response.data;
+  },
+  
+  // Approve or reject enrollment
+  respondToEnrollment: async (enrollmentId: number, action: 'approve' | 'reject') => {
+    const response = await apiClient.post('/users/teacher/enrollments/', {
+      enrollment_id: enrollmentId,
+      action: action,
+    });
+    return response.data;
+  },
+   
   // Get all exercises created by teacher
   getExercises: async () => {
     const response = await apiClient.get('/users/teacher/exercises/');
