@@ -11,9 +11,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, BookOpen, LogOut, FileText, Clock, Download, CheckCircle, MessageSquare, Megaphone, UserCheck, UserX } from 'lucide-react';
+import { Moon, Sun, BookOpen, LogOut, FileText, Clock, Download, CheckCircle, MessageSquare, Megaphone, UserCheck, UserX, Bell } from 'lucide-react';
 import Chat from '@/components/Chat';
 import { RoleSwitcher } from '@/components/RoleSwitcher';
+import Notifications from '@/components/Notifications';
 
 interface Class {
   id: number;
@@ -115,8 +116,9 @@ export default function TeacherDashboard() {
   const [gradeValue, setGradeValue] = useState('');
   const [feedbackText, setFeedbackText] = useState('');
   const [isGrading, setIsGrading] = useState(false);
-  const [showChat, setShowChat] = useState(false);
+const [showChat, setShowChat] = useState(false);
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
@@ -125,7 +127,8 @@ export default function TeacherDashboard() {
     setChatUnreadCount(count);
   }, []);
 
-  useNotificationWebSocket(handleChatUnreadUpdate);
+  const { unreadCount, refresh: refreshNotifications } = useNotificationWebSocket(handleChatUnreadUpdate);
+
   const [announcementTitle, setAnnouncementTitle] = useState('');
   const [announcementContent, setAnnouncementContent] = useState('');
   const [announcementClassId, setAnnouncementClassId] = useState('');
@@ -332,7 +335,15 @@ return (
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('teacher.dashboard.teacherDashboard')}</h1>
             <p className="text-sm text-gray-600 dark:text-gray-400">{t('teacher.dashboard.welcome')}, {user?.fullName || user?.email}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2"> 
+          <Button variant="outline" onClick={() => setShowNotifications(true)} className="relative">
+              <Bell className="h-4 w-4" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
             <Button variant="outline" onClick={() => setShowChat(!showChat)} className="relative">
               <MessageSquare className="h-4 w-4 mr-2" />
               {t('teacher.dashboard.chat')}
@@ -342,6 +353,7 @@ return (
                 </span>
               )}
             </Button>
+           
             <Button variant="outline" onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}>
               {i18n.language === 'en' ? 'ع' : 'EN'}
             </Button>
@@ -379,6 +391,13 @@ return (
             onUnreadCountChange={(count) => setChatUnreadCount(count)}
           />
         </div>
+      )}
+
+      {showNotifications && (
+        <Notifications onClose={() => {
+          setShowNotifications(false);
+          refreshNotifications();
+        }} />
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 dark:text-white" style={showChat ? { display: 'none' } : {}}>
