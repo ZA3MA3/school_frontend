@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
+import { useSearchParams } from 'react-router-dom';
 import { studentApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,6 +106,9 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [enrollmentFilter, setEnrollmentFilter] = useState<'all' | 'enrolled' | 'not_enrolled'>('all');
+const [searchParams] = useSearchParams();
+  const childId = searchParams.get('childId');
+  const parentChildId = childId ? parseInt(childId) : null;
 
   useEffect(() => {
     loadData();
@@ -120,14 +124,14 @@ export default function StudentDashboard() {
     return () => document.removeEventListener('click', handleClickOutside);
   }, [showSuggestions]);
 
-  const loadData = async () => {
+const loadData = async () => {
     try {
       const [classesData, exercisesData, submissionsData, announcementsData, attendanceData, skillsData] = await Promise.all([
-        studentApi.getAllClasses(),
-        studentApi.getExercises(),
-        studentApi.getSubmissions(),
-        studentApi.getAnnouncements(),
-        studentApi.getAttendance(),
+        studentApi.getAllClasses(parentChildId || undefined),
+        studentApi.getExercises(parentChildId || undefined),
+        studentApi.getSubmissions(parentChildId || undefined),
+        studentApi.getAnnouncements(parentChildId || undefined),
+        studentApi.getAttendance(parentChildId || undefined),
         studentApi.getSkills(),
       ]);
       console.log(`[DEBUG] Fetched classesData length:`, classesData.length, `Data:`, classesData);
@@ -144,14 +148,14 @@ export default function StudentDashboard() {
     }
   };
 
-  const handleEnroll = async (classId: number) => {
+const handleEnroll = async (classId: number) => {
     console.log(`[DEBUG] handleEnroll started for class ID: ${classId}`);
     setEnrolling(classId);
     try {
-      console.log(`[DEBUG] Calling studentApi.enrollInClass(${classId})...`);
-      const response = await studentApi.enrollInClass(classId);
+      console.log(`[DEBUG] Calling studentApi.enrollInClass(${classId}, ${parentChildId})...`);
+      const response = await studentApi.enrollInClass(classId, parentChildId || undefined);
       console.log(`[DEBUG] studentApi.enrollInClass completed. Response:`, response);
-      
+       
       console.log(`[DEBUG] Calling loadData() to refresh classes...`);
       await loadData();
       console.log(`[DEBUG] loadData() completed.`);
@@ -310,7 +314,9 @@ return (
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </DropdownMenuItem>
                 
-                <RoleSwitcher />
+<RoleSwitcher />
+                
+              
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>

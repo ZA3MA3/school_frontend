@@ -177,31 +177,39 @@ export const teacherApi = {
 
 // Student API functions
 export const studentApi = {
-  // Get all available classes
-  getAllClasses: async () => {
+// Get all available classes
+  getAllClasses: async (studentId?: number) => {
     const response = await apiClient.get('/users/classes/', {
-      params: { _t: new Date().getTime() }
+      params: { 
+        _t: new Date().getTime(),
+        ...(studentId ? { student_id: studentId } : {})
+      }
     });
     return response.data;
   },
   
-  // Enroll in a class
-  enrollInClass: async (classId: number) => {
+// Enroll in a class
+  enrollInClass: async (classId: number, studentId?: number) => {
     const response = await apiClient.post('/users/student/enroll/', {
       class_id: classId,
+      ...(studentId ? { student_id: studentId } : {})
     });
     return response.data;
   },
   
-  // Get all exercises available to student
-  getExercises: async () => {
-    const response = await apiClient.get('/users/student/exercises/');
+// Get all exercises available to student
+  getExercises: async (studentId?: number) => {
+    const response = await apiClient.get('/users/student/exercises/', {
+      params: studentId ? { student_id: studentId } : undefined
+    });
     return response.data;
   },
-  
+   
   // Get student's submissions
-  getSubmissions: async () => {
-    const response = await apiClient.get('/users/student/submissions/');
+  getSubmissions: async (studentId?: number) => {
+    const response = await apiClient.get('/users/student/submissions/', {
+      params: studentId ? { student_id: studentId } : undefined
+    });
     return response.data;
   },
   
@@ -225,15 +233,19 @@ export const studentApi = {
     return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
   },
   
-  // Get student's announcements
-  getAnnouncements: async () => {
-    const response = await apiClient.get('/users/student/announcements/');
+// Get student's announcements
+  getAnnouncements: async (studentId?: number) => {
+    const response = await apiClient.get('/users/student/announcements/', {
+      params: studentId ? { student_id: studentId } : undefined
+    });
     return response.data;
   },
   
-  // Get student's attendance
-  getAttendance: async () => {
-    const response = await apiClient.get('/users/student/attendance/');
+// Get student's attendance
+  getAttendance: async (studentId?: number) => {
+    const response = await apiClient.get('/users/student/attendance/', {
+      params: studentId ? { student_id: studentId } : undefined
+    });
     return response.data;
   },
   

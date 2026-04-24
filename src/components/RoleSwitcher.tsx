@@ -21,7 +21,7 @@ export function RoleSwitcher() {
     }
   };
 
-  const getRoleLabel = (role: UserRole) => {
+const getRoleLabel = (role: UserRole) => {
     switch (role) {
       case 'ADMIN': return t('roles.admin', 'Administrator');
       case 'TEACHER': return t('roles.teacher', 'Teacher');
@@ -31,11 +31,19 @@ export function RoleSwitcher() {
     }
   };
 
+  // Filter roles: hide STUDENT when in PARENT view (to prevent errors)
+  const visibleRoles = user.roles.filter((role) => {
+    if (activeRole === 'PARENT' && role === 'STUDENT') {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <>
       <DropdownMenuSeparator />
       <DropdownMenuLabel>{t('common.switchRole', 'Switch Role')}</DropdownMenuLabel>
-      {user.roles.map((role) => (
+      {visibleRoles.map((role) => (
         <DropdownMenuItem
           key={role}
           onClick={() => switchRole(role)}

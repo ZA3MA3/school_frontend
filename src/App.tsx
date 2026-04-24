@@ -62,7 +62,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
+<Route
           path="/student"
           element={
             <ProtectedRoute allowedRoles={['STUDENT']}>

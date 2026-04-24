@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX, Baby } from 'lucide-react';
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
 import { RoleSwitcher } from '@/components/RoleSwitcher';
@@ -81,12 +81,12 @@ interface PredictionResult {
 }
 
 export default function ParentDashboard() {
-  const { t, i18n } = useTranslation();
+const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
-  const { logout, user } = useAuth();
+  const { logout, user, switchRole } = useAuth();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-children');
   const [selectedChildForAnnouncements, setSelectedChildForAnnouncements] = useState<string>('');
-  const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<string>('');
+const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<string>('');
   const [children, setChildren] = useState<Student[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
   const [attendance, setAttendance] = useState<AttendanceData[]>([]);
@@ -207,7 +207,27 @@ export default function ParentDashboard() {
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </DropdownMenuItem>
                 
-                <RoleSwitcher />
+<RoleSwitcher />
+                
+                {children.length > 0 && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel>Select Child</DropdownMenuLabel>
+                    {children.map((child) => (
+                      <DropdownMenuItem 
+                        key={child.id}
+                        onClick={async () => {
+                          await switchRole('STUDENT');
+                          window.location.href = `/student?childId=${child.id}`;
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <Baby className="mr-2 h-4 w-4" />
+                        {child.full_name}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                )}
                 
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
