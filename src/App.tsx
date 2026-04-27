@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LandingPage from '@/pages/landingPage';
 import LoginPage from '@/pages/LoginPage';
+import SignUpPage from '@/pages/SignUpPage';
 import AdminDashboard from '@/pages/AdminDashboard';
 import TeacherDashboard from '@/pages/TeacherDashboard';
 import StudentDashboard from '@/pages/StudentDashboard';
@@ -42,8 +43,9 @@ function App() {
         {/* Dashboard Entry Point - redirects based on auth status */}
         <Route path="/dashboard" element={<HomeRedirect />} />
         
-        {/* Public Routes */}
+{/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<SignUpPage />} />
         
         {/* Protected Routes */}
         <Route

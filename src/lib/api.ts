@@ -72,9 +72,17 @@ export const authApi = {
     return response.data;
   },
   
-  // Refresh token if needed (optional, depends on your backend implementation)
+// Refresh token if needed (optional, depends on your backend implementation)
   refreshToken: async () => {
     const response = await apiClient.post('/users/token/refresh/');
+    return response.data;
+  },
+  
+  // Google OAuth login/signup
+  googleAuth: async (accessToken: string) => {
+    const response = await apiClient.post('/users/auth/google/', {
+      access_token: accessToken,
+    });
     return response.data;
   },
 };
@@ -345,6 +353,31 @@ export const notificationApi = {
 
 // WebSocket URL
 export const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000/ws/chat/';
+
+// OTP API functions
+export const otpApi = {
+  // Send OTP to phone number
+  sendOTP: async (phoneNumber: string) => {
+    const response = await apiClient.post('/users/otp/send/', {
+      phone_number: phoneNumber,
+    });
+    return response.data;
+  },
+  
+  // Verify OTP and update phone
+  verifyOTP: async (phoneNumber: string, code: string, email: string, firstName?: string, lastName?: string, address?: string, dateOfBirth?: string) => {
+    const response = await apiClient.post('/users/otp/verify/', {
+      phone_number: phoneNumber,
+      code: code,
+      email: email,
+      first_name: firstName || '',
+      last_name: lastName || '',
+      address: address || '',
+      date_of_birth: dateOfBirth || '',
+    });
+    return response.data;
+  },
+};
 
 // Generic API export
 export default apiClient;

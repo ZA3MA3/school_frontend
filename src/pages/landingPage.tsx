@@ -177,9 +177,14 @@ export default function LandingPage() {
             >
               {t('landing.contactUs')}
             </button>
-            <Link to="/login">
+<Link to="/login">
               <Button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-none px-8 h-12 uppercase tracking-widest text-xs font-bold transition-all">
               {t('landing.signIn')}
+              </Button>
+            </Link>
+            <Link to="/signup">
+              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-none px-8 h-12 uppercase tracking-widest text-xs font-bold transition-all">
+              Sign Up
               </Button>
             </Link>
           </div>
@@ -197,8 +202,8 @@ export default function LandingPage() {
             <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed max-w-3xl mx-auto relative">
             {t('landing.description')}
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 relative">
-              <Link to="/login">
+<div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 relative">
+              <Link to="/signup">
                 <Button className="bg-white text-black hover:bg-gray-200 rounded-none h-14 px-10 text-sm font-bold uppercase tracking-[0.2em] transition-all">
                   {t('landing.getStarted')}
                 </Button>

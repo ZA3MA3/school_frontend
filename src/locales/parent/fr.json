@@ -18,7 +18,7 @@
     "attendanceRecords": "حضور",
     "predictions": "توقعات"
   },
-  "children": {
+"children": {
     "noChildren": "لا ابن مرتبط بهذاالحساب",
     "enrolled": "مسجل",
     "active": "نشيط",
@@ -26,6 +26,7 @@
     "address": "العنوان",
     "parentOccupation": "مهنة الوالد",
     "dateOfBirth": "تاريخ الميلاد",
+    "enrollmentAge": " age التسجيل",
     "linkedAs": "أنت مرتبط كوالد لهذا الطالب"
   },
 

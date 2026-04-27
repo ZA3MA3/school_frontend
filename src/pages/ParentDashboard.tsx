@@ -17,12 +17,15 @@ import { RoleSwitcher } from '@/components/RoleSwitcher';
 interface Student {
   id: number;
   full_name: string;
-  phone_number: string;
-  address: string;
-  parent_occupation: string;
+  user: {
+    phone_number: string;
+    address: string;
+    date_of_birth: string | null;
+  } | null;
   date_of_birth: string | null;
   enrollment_date: string | null;
   parent_name: string | null;
+  enrollment_age: number | null;
 }
 
 interface AnnouncementData {
@@ -357,31 +360,39 @@ const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<str
                             {t('children.active')}
                           </span>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 mt-3">
-                          {child.phone_number && (
+<div className="grid grid-cols-2 gap-4 mt-3">
+                          {child.user?.phone_number && (
                             <div>
                               <p className="text-xs text-muted-foreground">{t('children.phone')}</p>
-                              <p className="font-medium text-sm">{child.phone_number}</p>
+                              <p className="font-medium text-sm">{child.user.phone_number}</p>
                             </div>
                           )}
-                          {child.address && (
+                          {child.user?.address && (
                             <div>
                               <p className="text-xs text-muted-foreground">{t('children.address')}</p>
-                              <p className="font-medium text-sm">{child.address}</p>
+                              <p className="font-medium text-sm">{child.user.address}</p>
                             </div>
                           )}
-                          {child.parent_occupation && (
+                          {child.user?.date_of_birth && (
                             <div>
-                              <p className="text-xs text-muted-foreground">{t('children.parentOccupation')}</p>
-                              <p className="font-medium text-sm">{child.parent_occupation}</p>
+                              <p className="text-xs text-muted-foreground">{t('children.dateOfBirth')}</p>
+                              <p className="font-medium text-sm">
+                                {new Date(child.user.date_of_birth).toLocaleDateString()}
+                              </p>
                             </div>
                           )}
-                          {child.date_of_birth && (
+                          {!child.user?.date_of_birth && child.date_of_birth && (
                             <div>
                               <p className="text-xs text-muted-foreground">{t('children.dateOfBirth')}</p>
                               <p className="font-medium text-sm">
                                 {new Date(child.date_of_birth).toLocaleDateString()}
                               </p>
+                            </div>
+                          )}
+                          {child.enrollment_age && (
+                            <div>
+                              <p className="text-xs text-muted-foreground">{t('children.enrollmentAge')}</p>
+                              <p className="font-medium text-sm">{child.enrollment_age}</p>
                             </div>
                           )}
                         </div>
@@ -414,11 +425,11 @@ const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<str
                               You are linked as the parent of this student
                             </p>
                           </div>
-                          {child.phone_number && (
+{child.user?.phone_number && (
                             <div className="flex items-start">
                               <Bell className="h-4 w-4 text-green-500 mr-2 mt-0.5" />
                               <p className="text-muted-foreground">
-                                Contact number: {child.phone_number}
+                                Contact number: {child.user.phone_number}
                               </p>
                             </div>
                           )}
