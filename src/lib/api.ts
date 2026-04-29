@@ -377,6 +377,26 @@ export const otpApi = {
     });
     return response.data;
   },
+  
+  // Create teacher profile with class
+  createTeacherProfile: async (hireDate: string, specialization: string, className: string, classDescription: string) => {
+    const response = await apiClient.post('/users/profile/teacher/', {
+      hire_date: hireDate,
+      specialization: specialization,
+      class_name: className,
+      class_description: classDescription,
+    });
+    return response.data;
+  },
+  
+  // Create parent profile with students
+  createParentStudent: async (occupation: string, students: Array<{first_name: string, last_name: string, enrollment_date: string, date_of_birth?: string, gender: boolean}>) => {
+    const response = await apiClient.post('/users/profile/parent/', {
+      occupation: occupation,
+      students: students,
+    });
+    return response.data;
+  },
 };
 
 // Generic API export
