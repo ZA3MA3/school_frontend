@@ -36,6 +36,9 @@ const getRoleLabel = (role: UserRole) => {
     if (activeRole === 'PARENT' && role === 'STUDENT') {
       return false;
     }
+    if (activeRole === 'TEACHER' && role === 'STUDENT') {
+      return false;
+    }
     return true;
   });
 

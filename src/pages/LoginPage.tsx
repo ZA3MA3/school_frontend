@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link, useNavigate } from 'react-router-dom';
+import { useGoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,24 +19,129 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, GraduationCap, Loader2, Moon, Sun } from 'lucide-react';
 
+type LoginMethod = 'email' | 'phone';
+
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
+  
+  // Phone login state
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  
   const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+  const authStore = useAuthStore();
 
   // Redirect if already authenticated
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     await login(email, password);
   };
+
+  const handlePhoneSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneError('');
+    setIsSubmitting(true);
+    
+    try {
+      const { otpApi } = await import('@/lib/api');
+      await otpApi.phoneLoginSend(phoneNumber);
+      setOtpSent(true);
+    } catch (err: any) {
+      setPhoneError(err.response?.data?.detail || 'Failed to send OTP');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handlePhoneVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPhoneError('');
+    setIsSubmitting(true);
+    
+    try {
+      const { otpApi } = await import('@/lib/api');
+      const data = await otpApi.phoneLoginVerify(phoneNumber, otpCode);
+      
+      // Store user data in auth store
+      authStore.login({
+        id: data.user?.id || 0,
+        email: data.user?.email || '',
+        firstName: data.user?.first_name,
+        lastName: data.user?.last_name,
+        fullName: data.user?.first_name + ' ' + data.user?.last_name,
+        roles: data.roles || [],
+      });
+      
+      // Redirect based on role
+      const activeRole = authStore.activeRole;
+      switch (activeRole) {
+        case 'ADMIN': navigate('/admin'); break;
+        case 'TEACHER': navigate('/teacher'); break;
+        case 'STUDENT': navigate('/student'); break;
+        case 'PARENT': navigate('/parent'); break;
+        default: navigate('/');
+      }
+    } catch (err: any) {
+      setPhoneError(err.response?.data?.detail || 'Invalid code');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (credentialResponse) => {
+      setIsSubmitting(true);
+      try {
+        const { otpApi } = await import('@/lib/api');
+        const data = await otpApi.googleLoginOnly(credentialResponse.access_token);
+        
+        // Store user data in auth store
+        authStore.login({
+          id: data.user?.id || 0,
+          email: data.user?.email || '',
+          firstName: data.user?.first_name,
+          lastName: data.user?.last_name,
+          fullName: data.user?.first_name + ' ' + data.user?.last_name,
+          roles: data.roles || [],
+        });
+        
+        // Redirect based on role
+        const activeRole = authStore.activeRole;
+        switch (activeRole) {
+          case 'ADMIN': navigate('/admin'); break;
+          case 'TEACHER': navigate('/teacher'); break;
+          case 'STUDENT': navigate('/student'); break;
+          case 'PARENT': navigate('/parent'); break;
+          default: navigate('/');
+        }
+      } catch (err: any) {
+        setPhoneError(err.response?.data?.detail || 'Google login failed');
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    onError: () => {
+      setPhoneError('Google login failed');
+    },
+    scope: 'openid email profile',
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
 return (
   <>
@@ -110,7 +217,7 @@ return (
         </Button>
        
       </div>
-      <Card className="w-full max-w-md dark:bg-zinc-800 relative z-10">
+<Card className="w-full max-w-md dark:bg-zinc-800 relative z-10">
         <CardHeader className="space-y-1">
           <div className="flex items-center justify-center mb-4">
             <div className="bg-primary p-3 rounded-full">
@@ -123,68 +230,165 @@ return (
           </CardDescription>
         </CardHeader>
         
-        <form onSubmit={handleSubmit}>
-          <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-<div className="space-y-2">
-              <Label htmlFor="email" className="dark:text-white">{t('login.email')}</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder={t('login.placeEmail')}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                required
-              />
-            </div>
-            
-<div className="space-y-2">
-              <Label htmlFor="password" className="dark:text-white">{t('login.password')}</Label>
-              <div className="relative">
+        {/* Login Method Toggle */}
+        <div className="flex border-b mx-4">
+          <button
+            type="button"
+            className={`flex-1 py-2 text-sm font-medium ${loginMethod === 'email' ? 'border-b-2 border-primary' : 'text-muted-foreground'}`}
+            onClick={() => setLoginMethod('email')}
+          >
+            Email
+          </button>
+          <button
+            type="button"
+            className={`flex-1 py-2 text-sm font-medium ${loginMethod === 'phone' ? 'border-b-2 border-primary' : 'text-muted-foreground'}`}
+            onClick={() => setLoginMethod('phone')}
+          >
+            Phone
+          </button>
+        </div>
+        
+        {loginMethod === 'email' ? (
+          <form onSubmit={handleEmailSubmit}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="email" className="dark:text-white">{t('login.email')}</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder={t('login.placePassword')}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder={t('login.placeEmail')}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   disabled={isLoading}
                   required
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
               </div>
-            </div>
-          </CardContent>
-          
-          <CardFooter>
-            <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t('login.loggingIn')}
-                </>
-              ) : (
-                t('login.login')
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="dark:text-white">{t('login.password')}</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder={t('login.placePassword')}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={isLoading}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+            
+            <CardFooter>
+              <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {t('login.loggingIn')}
+                  </>
+                ) : (
+                  t('login.login')
+                )}
+              </Button>
+            </CardFooter>
+          </form>
+        ) : (
+          <form onSubmit={otpSent ? handlePhoneVerify : handlePhoneSendOTP}>
+            <CardContent className="space-y-4">
+              {phoneError && (
+                <Alert variant="destructive">
+                  <AlertDescription>{phoneError}</AlertDescription>
+                </Alert>
               )}
-            </Button>
-          </CardFooter>
-        </form>
+              
+              {!otpSent ? (
+                <div className="space-y-2">
+                  <Label htmlFor="phone" className="dark:text-white">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="+1234567890"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    disabled={isLoading}
+                    required
+                  />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="otp" className="dark:text-white">Verification Code</Label>
+                  <Input
+                    id="otp"
+                    placeholder="123456"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value)}
+                    disabled={isLoading}
+                    maxLength={6}
+                    required
+                  />
+                </div>
+              )}
+            </CardContent>
+            
+            <CardFooter>
+              <Button type="submit" className="w-full mt-2" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    {otpSent ? 'Verifying...' : 'Sending...'}
+                  </>
+                ) : (
+                  otpSent ? 'Verify & Login' : 'Send Code'
+                )}
+              </Button>
+            </CardFooter>
+          </form>
+        )}
+        
+        {/* Divider */}
+        <div className="flex items-center mx-4 my-2">
+          <div className="flex-1 border-t"></div>
+          <span className="px-3 text-sm text-muted-foreground">or</span>
+          <div className="flex-1 border-t"></div>
+        </div>
+        
+        {/* Google Login Button */}
+        <CardFooter>
+          <Button 
+            type="button"
+            variant="outline" 
+            className="w-full"
+            onClick={() => googleLogin()}
+            disabled={isSubmitting}
+          >
+            Sign in with Google
+          </Button>
+        </CardFooter>
+        
+        <div className="text-center pb-4">
+          <Link to="/signup" className="text-sm text-primary hover:underline">
+            Don't have an account? Sign up
+          </Link>
+        </div>
       </Card>
     </div>
   </>

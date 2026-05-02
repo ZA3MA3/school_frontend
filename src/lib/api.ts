@@ -393,7 +393,32 @@ export const otpApi = {
   createParentStudent: async (occupation: string, students: Array<{first_name: string, last_name: string, enrollment_date: string, date_of_birth?: string, gender: boolean}>) => {
     const response = await apiClient.post('/users/profile/parent/', {
       occupation: occupation,
-      students: students,
+students: students,
+    });
+    return response.data;
+  },
+  
+  // Phone login - send OTP
+  phoneLoginSend: async (phoneNumber: string) => {
+    const response = await apiClient.post('/users/login/phone/send/', {
+      phone_number: phoneNumber,
+    });
+    return response.data;
+  },
+  
+  // Phone login - verify OTP and login
+  phoneLoginVerify: async (phoneNumber: string, code: string) => {
+    const response = await apiClient.post('/users/login/phone/verify/', {
+      phone_number: phoneNumber,
+      code: code,
+    });
+    return response.data;
+  },
+  
+  // Google login for existing users only
+  googleLoginOnly: async (accessToken: string) => {
+    const response = await apiClient.post('/users/login/google/', {
+      access_token: accessToken,
     });
     return response.data;
   },

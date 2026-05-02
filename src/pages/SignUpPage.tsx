@@ -1090,9 +1090,9 @@ export default function SignUpPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-4">
-              <Button className="w-full" onClick={goToPhoneStep} disabled={isLoading}>
+           {/*   <Button className="w-full" onClick={goToPhoneStep} disabled={isLoading}>
                 Continue to Phone Verification
-              </Button>
+              </Button>*/}
               <p className="text-sm text-center text-muted-foreground dark:text-gray-400">
                 Already have an account?{' '}
                 <Link to="/login" className="text-primary hover:underline">
