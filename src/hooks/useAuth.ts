@@ -26,7 +26,7 @@ export function useAuth() {
   // Get actions from store
   const store = useAuthStore();
   
-  // Login function
+// Login function
   const login = useCallback(async (email: string, password: string) => {
     store.setLoading(true);
     store.setError(null);
@@ -45,26 +45,7 @@ export function useAuth() {
         roles: data.roles || [], // Backend now returns 'roles' array
       });
       
-      // Redirect based on active role (set by store.login logic)
-      const currentActiveRole = useAuthStore.getState().activeRole;
-      
-      switch (currentActiveRole) {
-        case 'ADMIN':
-          navigate('/admin');
-          break;
-        case 'TEACHER':
-          navigate('/teacher');
-          break;
-        case 'STUDENT':
-          navigate('/student');
-          break;
-        case 'PARENT':
-          navigate('/parent');
-          break;
-        default:
-          navigate('/');
-      }
-      
+      // Return success without redirecting - let caller decide where to go
       return { success: true };
     } catch (err) {
       let errorMessage = 'Login failed';

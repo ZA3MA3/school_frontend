@@ -422,6 +422,30 @@ students: students,
     });
     return response.data;
   },
+
+  // Create payment checkout
+  createCheckout: async (amount: number, description: string) => {
+    const response = await apiClient.post('/users/payments/checkout/', {
+      amount,
+      description,
+    });
+    return response.data;
+  },
+
+  // Get subscription status
+  getSubscriptionStatus: async () => {
+    const response = await apiClient.get('/users/payments/status/');
+    console.log(response)
+    return response.data;
+  },
+
+  // Create subscription checkout with plan type
+  createSubscription: async (planType: string) => {
+    const response = await apiClient.post('/users/payments/checkout/', {
+      plan_type: planType,
+    });
+    return response.data;
+  },
 };
 
 // Generic API export

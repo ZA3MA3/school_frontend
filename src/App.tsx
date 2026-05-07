@@ -46,6 +46,12 @@ function App() {
 {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
+        <Route path="/payment/failed" element={
+          <div className="flex flex-col items-center justify-center min-h-screen bg-neutral-950">
+            <h1 className="text-3xl font-bold text-red-500 mb-4">Payment Failed</h1>
+            <p className="text-neutral-400">Something went wrong. Please try again.</p>
+          </div>
+        } />
         
         {/* Protected Routes */}
         <Route

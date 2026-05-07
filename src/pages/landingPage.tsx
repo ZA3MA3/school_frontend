@@ -17,7 +17,7 @@ export default function LandingPage() {
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
-  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [contactResponseMsg, setContactResponseMsg] = useState('');
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function LandingPage() {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const handleContactSubmit = async (e: React.FormEvent) => {
+const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactName || !contactEmail || !contactMessage) {
       setContactStatus('error');
@@ -78,6 +78,7 @@ export default function LandingPage() {
       });
 
       const data = await res.json();
+
       if (res.ok) {
         setContactStatus('success');
         setContactResponseMsg(data.detail || 'Your message has been sent successfully.');
@@ -91,7 +92,7 @@ export default function LandingPage() {
     } catch (err) {
       setContactStatus('error');
       setContactResponseMsg('An error occurred. Please try again later.');
-    }
+}
   };
 
   return (
@@ -208,7 +209,7 @@ export default function LandingPage() {
                   {t('landing.getStarted')}
                 </Button>
               </Link>
-              <Link to="#features">
+<Link to="#features">
                 <Button variant="ghost" className="text-white hover:bg-white/10 rounded-none h-14 px-10 text-sm font-bold uppercase tracking-[0.2em] transition-all border border-white/20">
                 {t('landing.learnMore')}
                 </Button>
