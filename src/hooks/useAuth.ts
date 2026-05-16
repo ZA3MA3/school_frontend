@@ -119,11 +119,11 @@ export function useAuth() {
   const isStudent = activeRole === 'STUDENT';
   const isParent = activeRole === 'PARENT';
 
-  // Permission checks (checks if user has the role at all)
-  const canBeAdmin = user?.roles.includes('ADMIN');
-  const canBeTeacher = user?.roles.includes('TEACHER');
-  const canBeStudent = user?.roles.includes('STUDENT');
-  const canBeParent = user?.roles.includes('PARENT');
+// Permission checks (checks if user has the role at all)
+  const canBeAdmin = user?.roles?.includes('ADMIN') ?? false;
+  const canBeTeacher = user?.roles?.includes('TEACHER') ?? false;
+  const canBeStudent = user?.roles?.includes('STUDENT') ?? false;
+  const canBeParent = user?.roles?.includes('PARENT') ?? false;
   
   return {
     // State
