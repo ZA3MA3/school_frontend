@@ -197,9 +197,9 @@ export const studentApi = {
   },
   
 // Enroll in a class
-  enrollInClass: async (classId: number, studentId?: number) => {
+  enrollInClass: async (classTeacherId: number, studentId?: number) => {
     const response = await apiClient.post('/users/student/enroll/', {
-      class_id: classId,
+      class_teacher_id: classTeacherId,
       ...(studentId ? { student_id: studentId } : {})
     });
     return response.data;

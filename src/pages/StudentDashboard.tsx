@@ -20,15 +20,25 @@ interface Class {
   id: number;
   name: string;
   description: string;
-  teacher: number;
-  teacher_name: string;
-  students: Array<{ id: number; user_id: number; full_name: string }>;
+  teachers: Array<{ id: number; name: string; class_teacher_id: number; level: string | null }>;
   student_count: number;
   enrollment_status: {
     status: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
     requested_at: string | null;
     responded_at: string | null;
   } | null;
+}
+
+interface ClassCard {
+  classId: number;
+  classTeacherId: number;
+  name: string;
+  description: string;
+  teacherName: string;
+  teacherId: number;
+  level: string | null;
+  studentCount: number;
+  enrollmentStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
 }
 
 interface Skill {
@@ -148,12 +158,12 @@ const loadData = async () => {
     }
   };
 
-const handleEnroll = async (classId: number) => {
-    console.log(`[DEBUG] handleEnroll started for class ID: ${classId}`);
-    setEnrolling(classId);
+const handleEnroll = async (classTeacherId: number) => {
+    console.log(`[DEBUG] handleEnroll started for classTeacherId: ${classTeacherId}`);
+    setEnrolling(classTeacherId);
     try {
-      console.log(`[DEBUG] Calling studentApi.enrollInClass(${classId}, ${parentChildId})...`);
-      const response = await studentApi.enrollInClass(classId, parentChildId || undefined);
+      console.log(`[DEBUG] Calling studentApi.enrollInClass(${classTeacherId}, ${parentChildId})...`);
+      const response = await studentApi.enrollInClass(classTeacherId, parentChildId || undefined);
       console.log(`[DEBUG] studentApi.enrollInClass completed. Response:`, response);
        
       console.log(`[DEBUG] Calling loadData() to refresh classes...`);
@@ -163,7 +173,7 @@ const handleEnroll = async (classId: number) => {
       console.error('[DEBUG] Error enrolling in class:', error);
       alert('Failed to enroll in class');
     } finally {
-      console.log(`[DEBUG] Clearing enrolling state for class ID: ${classId}`);
+      console.log(`[DEBUG] Clearing enrolling state for classTeacherId: ${classTeacherId}`);
       setEnrolling(null);
     }
   };
@@ -231,44 +241,65 @@ const handleEnroll = async (classId: number) => {
     return submissions.find((sub) => sub.exercise === exerciseId);
   };
 
-const isEnrolled = (classId: number) => {
-    const cls = classes.find((cls) => cls.id === classId);
-    if (!cls) return false;
-    
-    // Check enrollment_status from backend
-    if (cls.enrollment_status?.status === 'APPROVED') return true;
-    // Check legacy students array
-    return cls.students.some((s) => s.user_id === user?.id);
+  const flattenToClassCards = (): ClassCard[] => {
+    const cards: ClassCard[] = [];
+    for (const cls of classes) {
+      const status = cls.enrollment_status?.status || null;
+      if (cls.teachers.length === 0) {
+        cards.push({
+          classId: cls.id,
+          classTeacherId: 0,
+          name: cls.name,
+          description: cls.description,
+          teacherName: 'No teacher assigned',
+          teacherId: 0,
+          level: null,
+          studentCount: cls.student_count,
+          enrollmentStatus: status,
+        });
+      } else {
+        for (const teacher of cls.teachers) {
+          cards.push({
+            classId: cls.id,
+            classTeacherId: teacher.class_teacher_id,
+            name: cls.name,
+            description: cls.description,
+            teacherName: teacher.name,
+            teacherId: teacher.id,
+            level: teacher.level,
+            studentCount: cls.student_count,
+            enrollmentStatus: status,
+          });
+        }
+      }
+    }
+    return cards;
   };
 
-  const getEnrollmentStatus = (classId: number) => {
-    const cls = classes.find((cls) => cls.id === classId);
-    return cls?.enrollment_status?.status || null;
-  };
+  const classCards = flattenToClassCards();
 
-  const filteredClasses = classes.filter((cls) => {
+  const filteredClassCards = classCards.filter((card) => {
     const query = searchQuery.toLowerCase();
-    if (query && !cls.name.toLowerCase().includes(query) && !cls.teacher_name.toLowerCase().includes(query)) {
+    if (query && !card.name.toLowerCase().includes(query) && !card.teacherName.toLowerCase().includes(query)) {
       return false;
     }
-    const enrolled = isEnrolled(cls.id);
-    const status = getEnrollmentStatus(cls.id);
+    const enrolled = card.enrollmentStatus === 'APPROVED';
     if (enrollmentFilter === 'enrolled' && !enrolled) return false;
-    if (enrollmentFilter === 'not_enrolled' && (enrolled || status === 'PENDING')) return false;
+    if (enrollmentFilter === 'not_enrolled' && (enrolled || card.enrollmentStatus === 'PENDING')) return false;
     return true;
   });
 
   const suggestions = searchQuery.length >= 1 
-    ? classes
-        .filter((cls) => 
-          cls.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-          cls.teacher_name.toLowerCase().includes(searchQuery.toLowerCase())
+    ? classCards
+        .filter((card) => 
+          card.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+          card.teacherName.toLowerCase().includes(searchQuery.toLowerCase())
         )
         .slice(0, 4)
     : [];
 
-  const handleSelectSuggestion = (cls: Class) => {
-    setSearchQuery(cls.name);
+  const handleSelectSuggestion = (card: ClassCard) => {
+    setSearchQuery(card.name);
     setShowSuggestions(false);
   };
 
@@ -345,7 +376,7 @@ return (
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {classes.filter((cls) => cls.students.some(s => s.user_id === user?.id)).length}
+                {classCards.filter((card) => card.enrollmentStatus === 'APPROVED').length}
               </div>
               <p className="text-xs text-muted-foreground">Enrolled in</p>
             </CardContent>
@@ -420,14 +451,14 @@ return (
                     />
                     {showSuggestions && suggestions.length > 0 && (
                       <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-800 border rounded-md shadow-lg max-h-48 overflow-y-auto">
-                        {suggestions.map((cls) => (
+                        {suggestions.map((card) => (
                           <div
-                            key={cls.id}
-                            onClick={() => handleSelectSuggestion(cls)}
+                            key={`${card.classId}-${card.classTeacherId}`}
+                            onClick={() => handleSelectSuggestion(card)}
                             className="p-3 hover:bg-gray-100 dark:hover:bg-zinc-700 cursor-pointer border-b last:border-b-0 dark:border-zinc-700"
                           >
-                            <p className="font-medium">{cls.name}</p>
-                            <p className="text-sm text-muted-foreground">Teacher: {cls.teacher_name}</p>
+                            <p className="font-medium">{card.name}</p>
+                            <p className="text-sm text-muted-foreground">Teacher: {card.teacherName}</p>
                           </div>
                         ))}
                       </div>
@@ -459,26 +490,31 @@ return (
                       Not Enrolled
                     </Button>
                   </div>
-                  {filteredClasses.length === 0 ? (
+                  {filteredClassCards.length === 0 ? (
                     <p className="text-muted-foreground">No classes match your filters</p>
                   ) : (
-<div className="space-y-4 max-h-[400px] overflow-y-auto">
-                      {filteredClasses.map((cls) => {
-                        const enrolled = isEnrolled(cls.id);
-                        const enrollmentStatus = getEnrollmentStatus(cls.id);
+                    <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                      {filteredClassCards.map((card) => {
+                        const enrolled = card.enrollmentStatus === 'APPROVED';
+                        const enrollmentStatus = card.enrollmentStatus;
                         return (
-                          <div key={cls.id} className="p-4 border rounded-lg dark:border-zinc-700">
+                          <div key={`${card.classId}-${card.classTeacherId}`} className="p-4 border rounded-lg dark:border-zinc-700">
                             <div className="flex justify-between items-start">
                               <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{cls.name}</h3>
+                                <h3 className="font-semibold text-lg">{card.name}</h3>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  {cls.description || 'No description provided'}
+                                  {card.description || 'No description provided'}
                                 </p>
                                 <p className="text-sm text-muted-foreground mt-2">
-                                  <strong>Teacher:</strong> {cls.teacher_name}
+                                  <strong>Teacher:</strong> {card.teacherName}
                                 </p>
+                                {card.level && (
+                                  <p className="text-sm text-muted-foreground mt-1">
+                                    <strong>Level:</strong> {card.level}
+                                  </p>
+                                )}
                                 <p className="text-xs text-muted-foreground mt-1">
-                                  {cls.student_count} students enrolled
+                                  {card.studentCount} students enrolled
                                 </p>
                                 {enrolled && (
                                   <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full mt-2">
@@ -510,20 +546,20 @@ return (
                                   </Button>
                                 ) : enrollmentStatus === 'REJECTED' ? (
                                   <Button
-                                    onClick={() => handleEnroll(cls.id)}
-                                    disabled={enrolling === cls.id}
+                                    onClick={() => handleEnroll(card.classTeacherId)}
+                                    disabled={enrolling === card.classTeacherId}
                                     size="sm"
                                     variant="destructive"
                                   >
-                                    {enrolling === cls.id ? 'Resending...' : 'Resend Request'}
+                                    {enrolling === card.classTeacherId ? 'Resending...' : 'Resend Request'}
                                   </Button>
                                 ) : (
                                   <Button
-                                    onClick={() => handleEnroll(cls.id)}
-                                    disabled={enrolling === cls.id}
+                                    onClick={() => handleEnroll(card.classTeacherId)}
+                                    disabled={enrolling === card.classTeacherId}
                                     size="sm"
                                   >
-                                    {enrolling === cls.id ? (
+                                    {enrolling === card.classTeacherId ? (
                                       'Requesting...'
                                     ) : (
                                       <>
