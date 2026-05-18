@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Moon, Sun, LogOut, FileText, Download, CheckCircle, UserPlus, UserCheck, UserX, Bell, Search, Clock } from 'lucide-react';
 import { AxiosError } from 'axios';
 import Notifications from '@/components/Notifications';
@@ -116,7 +117,8 @@ export default function StudentDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [enrollmentFilter, setEnrollmentFilter] = useState<'all' | 'enrolled' | 'not_enrolled'>('all');
-const [searchParams] = useSearchParams();
+  const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [searchParams] = useSearchParams();
   const childId = searchParams.get('childId');
   const parentChildId = childId ? parseInt(childId) : null;
 
@@ -283,6 +285,7 @@ const handleEnroll = async (classTeacherId: number) => {
     if (query && !card.name.toLowerCase().includes(query) && !card.teacherName.toLowerCase().includes(query)) {
       return false;
     }
+    if (levelFilter !== 'all' && card.level !== levelFilter) return false;
     const enrolled = card.enrollmentStatus === 'APPROVED';
     if (enrollmentFilter === 'enrolled' && !enrolled) return false;
     if (enrollmentFilter === 'not_enrolled' && (enrolled || card.enrollmentStatus === 'PENDING')) return false;
@@ -464,31 +467,58 @@ return (
                       </div>
                     )}
                   </div>
-                  <div className="flex gap-2 mb-4">
-                    <Button
-                      variant={enrollmentFilter === 'all' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setEnrollmentFilter('all')}
-                      className={enrollmentFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : ''}
-                    >
-                      All Classes
-                    </Button>
-                    <Button
-                      variant={enrollmentFilter === 'enrolled' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setEnrollmentFilter('enrolled')}
-                      className={enrollmentFilter === 'enrolled' ? 'bg-green-600 hover:bg-green-700' : ''}
-                    >
-                      Enrolled
-                    </Button>
-                    <Button
-                      variant={enrollmentFilter === 'not_enrolled' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setEnrollmentFilter('not_enrolled')}
-                      className={enrollmentFilter === 'not_enrolled' ? 'bg-orange-500 hover:bg-orange-600' : ''}
-                    >
-                      Not Enrolled
-                    </Button>
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        variant={enrollmentFilter === 'all' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setEnrollmentFilter('all')}
+                        className={enrollmentFilter === 'all' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                      >
+                        All Classes
+                      </Button>
+                      <Button
+                        variant={enrollmentFilter === 'enrolled' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setEnrollmentFilter('enrolled')}
+                        className={enrollmentFilter === 'enrolled' ? 'bg-green-600 hover:bg-green-700' : ''}
+                      >
+                        Enrolled
+                      </Button>
+                      <Button
+                        variant={enrollmentFilter === 'not_enrolled' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setEnrollmentFilter('not_enrolled')}
+                        className={enrollmentFilter === 'not_enrolled' ? 'bg-orange-500 hover:bg-orange-600' : ''}
+                      >
+                        Not Enrolled
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">
+                        {t('classes.level')}:
+                      </span>
+                      <Select value={levelFilter} onValueChange={setLevelFilter}>
+                        <SelectTrigger className="w-[140px] bg-white dark:bg-zinc-800">
+                          <SelectValue placeholder={t('classes.level')} />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">{t('student.classes.allLevels')}</SelectItem>
+                          <SelectItem value="1AP">1AP</SelectItem>
+                          <SelectItem value="2AP">2AP</SelectItem>
+                          <SelectItem value="3AP">3AP</SelectItem>
+                          <SelectItem value="4AP">4AP</SelectItem>
+                          <SelectItem value="5AP">5AP</SelectItem>
+                          <SelectItem value="1AM">1AM</SelectItem>
+                          <SelectItem value="2AM">2AM</SelectItem>
+                          <SelectItem value="3AM">3AM</SelectItem>
+                          <SelectItem value="4AM">4AM</SelectItem>
+                          <SelectItem value="1AS">1AS</SelectItem>
+                          <SelectItem value="2AS">2AS</SelectItem>
+                          <SelectItem value="3AS">3AS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   {filteredClassCards.length === 0 ? (
                     <p className="text-muted-foreground">No classes match your filters</p>

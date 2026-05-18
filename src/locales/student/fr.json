@@ -22,7 +22,9 @@
     "noClasses": "لا توجد مواد",
     "enroll": "تسجيل",
     "enrolled": "مسجل",
-    "notEnrolled": "غير مسجل"
+    "notEnrolled": "غير مسجل",
+    "level": "المستوى",
+    "allLevels": "كل المستويات"
   },
   "exercises": {
     "noExercises": "لا يوجد تمارين",

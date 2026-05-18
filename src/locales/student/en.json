@@ -20,7 +20,9 @@
     "noClasses": "No classes available",
     "enroll": "Enroll",
     "enrolled": "Enrolled",
-    "notEnrolled": "Not Enrolled"
+    "notEnrolled": "Not Enrolled",
+    "level": "Level",
+    "allLevels": "All Levels"
   },
   "exercises": {
     "noExercises": "No exercises available",
