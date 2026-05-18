@@ -13,6 +13,7 @@ import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, Us
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
 import { RoleSwitcher } from '@/components/RoleSwitcher';
+import { useNavigate } from 'react-router-dom';
 
 interface Student {
   id: number;
@@ -84,6 +85,7 @@ interface PredictionResult {
 }
 
 export default function ParentDashboard() {
+  const navigate = useNavigate();
 const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { logout, user, switchRole } = useAuth();
@@ -143,6 +145,8 @@ const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<str
   }, [loadChatUnreadCount]);
 
   const loadData = async () => {
+    
+  
     try {
       const [childrenData, announcementsData, attendanceData] = await Promise.all([
         parentApi.getChildren(),
@@ -150,6 +154,10 @@ const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<str
         parentApi.getAttendance(),
       ]);
       setChildren(childrenData);
+      console.log('Children API response:', childrenData);
+      console.log('Children data type:', typeof childrenData);
+      console.log('Is children data an array?', Array.isArray(childrenData));
+      console.log('Number of children received:', childrenData?.length || 0);
       setAnnouncements(announcementsData);
       setAttendance(attendanceData);
     } catch (error) {
@@ -221,7 +229,8 @@ const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<str
                         key={child.id}
                         onClick={async () => {
                           await switchRole('STUDENT');
-                          window.location.href = `/student?childId=${child.id}`;
+                    //      window.location.href = `/student?childId=${child.id}`;
+                    navigate(`/student?childId=${child.id}`);
                         }}
                         className="cursor-pointer"
                       >
