@@ -13,11 +13,11 @@ import { useIsAuthenticated, useActiveRole } from '@/stores/authStore';
 function HomeRedirect() {
   const isAuthenticated = useIsAuthenticated();
   const activeRole = useActiveRole();
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  
+
   // Redirect to active-role dashboard
   switch (activeRole) {
     case 'ADMIN':
@@ -39,11 +39,11 @@ function App() {
       <Routes>
         {/* Root - Landing Page */}
         <Route path="/" element={<LandingPage />} />
-        
+
         {/* Dashboard Entry Point - redirects based on auth status */}
         <Route path="/dashboard" element={<HomeRedirect />} />
-        
-{/* Public Routes */}
+
+        {/* Public Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/payment/failed" element={
@@ -52,7 +52,7 @@ function App() {
             <p className="text-neutral-400">Something went wrong. Please try again.</p>
           </div>
         } />
-        
+
         {/* Protected Routes */}
         <Route
           path="/admin"
@@ -70,10 +70,10 @@ function App() {
             </ProtectedRoute>
           }
         />
-<Route
+        <Route
           path="/student"
           element={
-            <ProtectedRoute allowedRoles={['STUDENT']}>, 
+            <ProtectedRoute allowedRoles={['STUDENT']}>
               <StudentDashboard />
             </ProtectedRoute>
           }
@@ -86,7 +86,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Fallback for unknown routes */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -289,6 +289,23 @@ export const parentApi = {
     const response = await apiClient.get(`/users/predict/student/${studentId}/`);
     return response.data;
   },
+
+  // Get exercises that a parent can assign to their child
+  getSearchExercises: async (studentId: number) => {
+    const response = await apiClient.get('/users/parent/exercises/search/', {
+      params: { student_id: studentId }
+    });
+    return response.data;
+  },
+
+  // Assign an exercise to a student child
+  assignExercise: async (studentId: number, exerciseId: number) => {
+    const response = await apiClient.post('/users/parent/exercises/assign/', {
+      student_id: studentId,
+      exercise_id: exerciseId
+    });
+    return response.data;
+  },
 };
 
 // Chat API functions

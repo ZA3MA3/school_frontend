@@ -56,6 +56,7 @@ interface Exercise {
   class_name: string;
   due_date: string | null;
   skills: Skill[];
+  level?: string | null;
 }
 
 interface Submission {
@@ -677,6 +678,11 @@ return (
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
                               <h3 className="font-semibold">{exercise.title}</h3>
+                              {exercise.level && (
+                                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                                  {exercise.level}
+                                </span>
+                              )}
                               {submitted && (
                                 <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full flex items-center gap-1">
                                   <CheckCircle className="h-3 w-3" />

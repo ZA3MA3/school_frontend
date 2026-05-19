@@ -59,11 +59,30 @@ interface AttendanceData {
   attendance: AttendanceRecord[];
 }
 
+interface Skill {
+  id: number;
+  name: string;
+}
+
+interface Exercise {
+  id: number;
+  title: string;
+  description: string;
+  file_url: string | null;
+  teacher_name: string;
+  class_name: string;
+  due_date: string | null;
+  skills: Skill[];
+  level?: string | null;
+  is_assigned?: boolean;
+}
+
 const TABS = [
   { id: 'my-children', labelKey: 'tabs.myChildren' },
   { id: 'announcements', labelKey: 'tabs.announcements' },
   { id: 'attendance-records', labelKey: 'tabs.attendanceRecords' },
   { id: 'predictions', labelKey: 'tabs.predictions' },
+  { id: 'assign-exercise', labelKey: 'tabs.assignExercise' },
 ] as const;
 
 interface PredictionResult {
@@ -86,12 +105,15 @@ interface PredictionResult {
 
 export default function ParentDashboard() {
   const navigate = useNavigate();
-const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const { logout, user, switchRole } = useAuth();
   const [activeTab, setActiveTab] = useState<typeof TABS[number]['id']>('my-children');
   const [selectedChildForAnnouncements, setSelectedChildForAnnouncements] = useState<string>('');
-const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<string>('');
+  const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<string>('');
+  const [selectedChildForAssign, setSelectedChildForAssign] = useState<string>('');
+  const [assignableExercises, setAssignableExercises] = useState<Exercise[]>([]);
+  const [loadingExercises, setLoadingExercises] = useState(false);
   const [children, setChildren] = useState<Student[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
   const [attendance, setAttendance] = useState<AttendanceData[]>([]);
@@ -101,6 +123,51 @@ const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<str
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [predictions, setPredictions] = useState<{ [studentId: number]: PredictionResult }>({});
   const [predicting, setPredicting] = useState<number | null>(null);
+
+  const fetchAssignableExercises = async (studentId: number) => {
+    setLoadingExercises(true);
+    try {
+      const data = await parentApi.getSearchExercises(studentId);
+      setAssignableExercises(data);
+    } catch (error) {
+      console.error('Error fetching assignable exercises:', error);
+    } finally {
+      setLoadingExercises(false);
+    }
+  };
+
+  useEffect(() => {
+    if (children.length > 0 && !selectedChildForAssign) {
+      setSelectedChildForAssign(children[0].id.toString());
+    }
+  }, [children, selectedChildForAssign]);
+
+  useEffect(() => {
+    if (selectedChildForAssign) {
+      fetchAssignableExercises(parseInt(selectedChildForAssign));
+    }
+  }, [selectedChildForAssign]);
+
+  const [assigningExerciseId, setAssigningExerciseId] = useState<number | null>(null);
+
+  const handleAssignExercise = async (exerciseId: number) => {
+    if (!selectedChildForAssign) return;
+    setAssigningExerciseId(exerciseId);
+    try {
+      const studentId = parseInt(selectedChildForAssign);
+      await parentApi.assignExercise(studentId, exerciseId);
+      
+      // Update local state to mark this exercise as assigned instantly
+      setAssignableExercises(prev => 
+        prev.map(ex => ex.id === exerciseId ? { ...ex, is_assigned: true } : ex)
+      );
+    } catch (error: any) {
+      console.error('Error assigning exercise:', error);
+      alert('Failed to assign exercise: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setAssigningExerciseId(null);
+    }
+  };
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en');
@@ -732,6 +799,84 @@ childAttendance.map((childData) => (
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'assign-exercise' && (
+          <Card className="mt-6">
+            <CardHeader>
+              <CardTitle>{t('tabs.assignExercise')}</CardTitle>
+              <CardDescription>Search and assign exercises for your children</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {children.length === 0 ? (
+                <p className="text-muted-foreground">{t('children.noChildren')}</p>
+              ) : (
+                <div>
+                  <div className="flex gap-4 items-center mb-6">
+                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Select Child:</span>
+                    <div className="flex gap-2">
+                      {children.map(child => (
+                        <Button
+                          key={child.id}
+                          variant={selectedChildForAssign === child.id.toString() ? "default" : "outline"}
+                          onClick={() => setSelectedChildForAssign(child.id.toString())}
+                          size="sm"
+                        >
+                          {child.full_name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {loadingExercises ? (
+                    <div className="text-center py-6">{t('common.loading')}</div>
+                  ) : assignableExercises.length === 0 ? (
+                    <p className="text-muted-foreground">No assignable exercises available for this child.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[500px] overflow-y-auto">
+                      {assignableExercises.map(exercise => (
+                        <div key={exercise.id} className="border rounded-lg p-4 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col justify-between shadow-sm">
+                          <div>
+                            <div className="flex justify-between items-start mb-2">
+                              <h3 className="font-semibold text-lg dark:text-white">{exercise.title}</h3>
+                              {exercise.level && (
+                                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                                  {exercise.level}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">{exercise.description}</p>
+                            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
+                              <p>Teacher: {exercise.teacher_name}</p>
+                              {exercise.class_name && <p>Class: {exercise.class_name}</p>}
+                              {exercise.due_date && <p>Due Date: {new Date(exercise.due_date).toLocaleDateString()}</p>}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 justify-end items-center">
+                            <Button
+                              size="sm"
+                              variant={exercise.is_assigned ? "secondary" : "default"}
+                              className={`w-full sm:w-auto ${exercise.is_assigned ? "opacity-60 cursor-not-allowed bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300" : ""}`}
+                              disabled={exercise.is_assigned || assigningExerciseId === exercise.id}
+                              onClick={() => handleAssignExercise(exercise.id)}
+                            >
+                              {assigningExerciseId === exercise.id ? (
+                                'Assigning...'
+                              ) : exercise.is_assigned ? (
+                                'Assigned'
+                              ) : (
+                                'Assign'
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
