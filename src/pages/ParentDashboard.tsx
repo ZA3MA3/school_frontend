@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX, Baby, Download } from 'lucide-react';
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
@@ -141,14 +142,17 @@ export default function ParentDashboard() {
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const [predictions, setPredictions] = useState<{ [studentId: number]: PredictionResult }>({});
   const [predicting, setPredicting] = useState<number | null>(null);
+  const [assigningExerciseId, setAssigningExerciseId] = useState<number | null>(null);
+  const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [classFilter, setClassFilter] = useState<string>('');
 
-  const fetchAssignableExercises = async (studentId: number) => {
-    setLoadingExercises(true);
+const fetchAssignableExercises = async (studentId: number) => {
     try {
-      const data = await parentApi.getSearchExercises(studentId);
+      const data = await parentApi.getSearchExercises(studentId, levelFilter === 'all' ? undefined : levelFilter, classFilter || undefined);
       setAssignableExercises(data);
     } catch (error) {
       console.error('Error fetching assignable exercises:', error);
+      alert('Failed to fetch assignable exercises');
     } finally {
       setLoadingExercises(false);
     }
@@ -160,13 +164,13 @@ export default function ParentDashboard() {
     }
   }, [children, selectedChildForAssign]);
 
-  useEffect(() => {
+useEffect(() => {
     if (selectedChildForAssign) {
       fetchAssignableExercises(parseInt(selectedChildForAssign));
     }
-  }, [selectedChildForAssign]);
+  }, [selectedChildForAssign, levelFilter, classFilter]);
 
-  const [assigningExerciseId, setAssigningExerciseId] = useState<number | null>(null);
+
 
   const handleAssignExercise = async (exerciseId: number) => {
     if (!selectedChildForAssign) return;
@@ -826,84 +830,132 @@ childAttendance.map((childData) => (
           </Card>
         )}
 
-        {activeTab === 'assign-exercise' && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>{t('tabs.assignExercise')}</CardTitle>
-              <CardDescription>Search and assign exercises for your children</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {children.length === 0 ? (
-                <p className="text-muted-foreground">{t('children.noChildren')}</p>
-              ) : (
-                <div>
-                  <div className="flex gap-4 items-center mb-6">
-                    <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Select Child:</span>
-                    <div className="flex gap-2">
-                      {children.map(child => (
-                        <Button
-                          key={child.id}
-                          variant={selectedChildForAssign === child.id.toString() ? "default" : "outline"}
-                          onClick={() => setSelectedChildForAssign(child.id.toString())}
-                          size="sm"
-                        >
-                          {child.full_name}
-                        </Button>
-                      ))}
+{activeTab === 'assign-exercise' && (
+  <Card className="mt-6">
+    <CardHeader>
+      <CardTitle>{t('tabs.assignExercise')}</CardTitle>
+      <CardDescription>Search and assign exercises for your children</CardDescription>
+    </CardHeader>
+    <CardContent>
+      {children.length === 0 ? (
+        <p className="text-muted-foreground">{t('children.noChildren')}</p>
+      ) : (
+        <div>
+          <div className="flex gap-4 items-center mb-6">
+            <span className="font-medium text-sm text-gray-700 dark:text-gray-300">Select Child:</span>
+            <div className="flex gap-2">
+              {children.map(child => (
+                <Button
+                  key={child.id}
+                  variant={selectedChildForAssign === child.id.toString() ? "default" : "outline"}
+                  onClick={() => setSelectedChildForAssign(child.id.toString())}
+                  size="sm"
+                >
+                  {child.full_name}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-4 items-center mb-6">
+            <div className="flex flex-col w-35">
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Level</label>
+              <Select value={levelFilter} onValueChange={setLevelFilter}>
+                <SelectTrigger className="w-[140px] bg-white dark:bg-zinc-800">
+                  <SelectValue placeholder="Select Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="1AP">1AP</SelectItem>
+                  <SelectItem value="2AP">2AP</SelectItem>
+                  <SelectItem value="3AP">3AP</SelectItem>
+                  <SelectItem value="4AP">4AP</SelectItem>
+                  <SelectItem value="5AP">5AP</SelectItem>
+                  <SelectItem value="1AM">1AM</SelectItem>
+                  <SelectItem value="2AM">2AM</SelectItem>
+                  <SelectItem value="3AM">3AM</SelectItem>
+                  <SelectItem value="4AM">4AM</SelectItem>
+                  <SelectItem value="1AS">1AS</SelectItem>
+                  <SelectItem value="2AS">2AS</SelectItem>
+                  <SelectItem value="3AS">3AS</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col w-54">
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Class Name</label>
+              <input
+                type="text"
+                value={classFilter}
+                onChange={(e) => setClassFilter(e.target.value)}
+                placeholder="Search by class name"
+                className="p-2 border rounded-md text-sm bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+              />
+            </div>
+          </div>
+
+          {loadingExercises ? (
+            <div className="text-center py-6">{t('common.loading')}</div>
+          ) : assignableExercises.length === 0 ? (
+            <p className="text-muted-foreground text-center py-6">No assignable exercises available for this child.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[500px] overflow-y-auto">
+              {assignableExercises.map(exercise => (
+                <div key={exercise.id} className="border rounded-lg p-4 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col justify-between shadow-sm">
+                  <div>
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-semibold text-lg dark:text-white">{exercise.title}</h3>
+                      {exercise.level && (
+                        <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                          {exercise.level}
+                        </span>
+                      )}
                     </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">{exercise.description}</p>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
+                      <p>Teacher: {exercise.teacher_name}</p>
+                      {exercise.class_name && <p>Class: {exercise.class_name}</p>}
+                      {exercise.due_date && <p>Due Date: {new Date(exercise.due_date).toLocaleDateString()}</p>}
+                    </div>
+                    {exercise.skills && Array.isArray(exercise.skills) && exercise.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {exercise.skills.map((skillItem: any) => {
+                          const skillId = typeof skillItem === 'object' ? skillItem.id : skillItem;
+                          const skillName = typeof skillItem === 'object' ? skillItem.name : `Skill ${skillId}`;
+                          return (
+                            <span key={skillId} className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/35 text-purple-800 dark:text-purple-200 text-xs rounded-full">
+                              {skillName}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-
-                  {loadingExercises ? (
-                    <div className="text-center py-6">{t('common.loading')}</div>
-                  ) : assignableExercises.length === 0 ? (
-                    <p className="text-muted-foreground">No assignable exercises available for this child.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[500px] overflow-y-auto">
-                      {assignableExercises.map(exercise => (
-                        <div key={exercise.id} className="border rounded-lg p-4 dark:border-zinc-700 bg-white dark:bg-zinc-800 flex flex-col justify-between shadow-sm">
-                          <div>
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="font-semibold text-lg dark:text-white">{exercise.title}</h3>
-                              {exercise.level && (
-                                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
-                                  {exercise.level}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">{exercise.description}</p>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 space-y-1 mb-4">
-                              <p>Teacher: {exercise.teacher_name}</p>
-                              {exercise.class_name && <p>Class: {exercise.class_name}</p>}
-                              {exercise.due_date && <p>Due Date: {new Date(exercise.due_date).toLocaleDateString()}</p>}
-                            </div>
-                          </div>
-                          <div className="flex gap-2 justify-end items-center">
-                            <Button
-                              size="sm"
-                              variant={exercise.is_assigned ? "secondary" : "default"}
-                              className={`w-full sm:w-auto ${exercise.is_assigned ? "opacity-60 cursor-not-allowed bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300" : ""}`}
-                              disabled={exercise.is_assigned || assigningExerciseId === exercise.id}
-                              onClick={() => handleAssignExercise(exercise.id)}
-                            >
-                              {assigningExerciseId === exercise.id ? (
-                                'Assigning...'
-                              ) : exercise.is_assigned ? (
-                                'Assigned'
-                              ) : (
-                                'Assign'
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex gap-2 justify-end items-center">
+                    <Button
+                      size="sm"
+                      variant={exercise.is_assigned ? "secondary" : "default"}
+                      className={`w-full sm:w-auto ${exercise.is_assigned ? "opacity-60 cursor-not-allowed bg-zinc-200 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-300" : ""}`}
+                      disabled={exercise.is_assigned || assigningExerciseId === exercise.id}
+                      onClick={() => handleAssignExercise(exercise.id)}
+                    >
+                      {assigningExerciseId === exercise.id ? (
+                        'Assigning...'
+                      ) : exercise.is_assigned ? (
+                        'Assigned'
+                      ) : (
+                        'Assign'
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </CardContent>
+  </Card>
+)}
         {activeTab === 'child-submissions' && (
           <Card className="mt-6 bg-white dark:bg-zinc-900 border dark:border-zinc-800 shadow-lg">
             <CardHeader className="border-b dark:border-zinc-800 pb-4">
