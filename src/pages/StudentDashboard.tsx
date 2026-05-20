@@ -195,7 +195,7 @@ const handleEnroll = async (classTeacherId: number) => {
       formData.append('exercise', exerciseId.toString());
       formData.append('submission_file', submitFile);
       
-      await studentApi.submitExercise(formData);
+      await studentApi.submitExercise(formData, parentChildId || undefined);
       
       setSubmitFile(null);
       setSelectedExercise(null);
@@ -219,7 +219,7 @@ const handleEnroll = async (classTeacherId: number) => {
       const formData = new FormData();
       formData.append('exercise', exerciseId.toString());
       
-      await studentApi.submitExercise(formData);
+      await studentApi.submitExercise(formData, parentChildId || undefined);
       
       setSelectedExercise(null);
       loadData();

@@ -222,7 +222,10 @@ export const studentApi = {
   },
   
   // Submit an exercise
-  submitExercise: async (data: FormData) => {
+  submitExercise: async (data: FormData, studentId?: number) => {
+    if (studentId && !data.has('student_id')) {
+      data.append('student_id', studentId.toString());
+    }
     const response = await apiClient.post('/users/student/submissions/', data, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -306,6 +309,13 @@ export const parentApi = {
     });
     return response.data;
   },
+
+  getSubmissions: async (studentId?: number) => {
+    const response = await apiClient.get('/users/parent/submissions/', { 
+        params: studentId ? { student_id: studentId } : undefined
+    });
+    return response.data;
+},
 };
 
 // Chat API functions

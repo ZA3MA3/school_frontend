@@ -3,13 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotificationWebSocket } from '@/hooks/useNotificationWebSocket';
-import { parentApi, chatApi } from '@/lib/api';
+import { parentApi, chatApi, teacherApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
-import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX, Baby } from 'lucide-react';
+import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX, Baby, Download } from 'lucide-react';
 import Chat from '@/components/Chat';
 import Notifications from '@/components/Notifications';
 import { RoleSwitcher } from '@/components/RoleSwitcher';
@@ -77,12 +77,28 @@ interface Exercise {
   is_assigned?: boolean;
 }
 
+interface Submission {
+  id: number;
+  student: number;
+  student_name: string;
+  exercise: number;
+  exercise_title: string;
+  submission_file: string | null;
+  submission_file_url: string | null;
+  submission_text: string;
+  submitted_at: string;
+  grade: number | null;
+  feedback: string;
+  graded_at: string | null;
+}
+
 const TABS = [
   { id: 'my-children', labelKey: 'tabs.myChildren' },
   { id: 'announcements', labelKey: 'tabs.announcements' },
   { id: 'attendance-records', labelKey: 'tabs.attendanceRecords' },
   { id: 'predictions', labelKey: 'tabs.predictions' },
   { id: 'assign-exercise', labelKey: 'tabs.assignExercise' },
+  { id: 'child-submissions', labelKey: 'tabs.submissions' },
 ] as const;
 
 interface PredictionResult {
@@ -112,11 +128,13 @@ export default function ParentDashboard() {
   const [selectedChildForAnnouncements, setSelectedChildForAnnouncements] = useState<string>('');
   const [selectedChildForAttendance, setSelectedChildForAttendance] = useState<string>('');
   const [selectedChildForAssign, setSelectedChildForAssign] = useState<string>('');
+  const [selectedChildForSubmissions, setSelectedChildForSubmissions] = useState<string>('');
   const [assignableExercises, setAssignableExercises] = useState<Exercise[]>([]);
   const [loadingExercises, setLoadingExercises] = useState(false);
   const [children, setChildren] = useState<Student[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementData[]>([]);
   const [attendance, setAttendance] = useState<AttendanceData[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [showChat, setShowChat] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -190,6 +208,7 @@ export default function ParentDashboard() {
 
   const childAnnouncements = announcements.filter(ann => selectedChildForAnnouncements === '' || ann.child_name === selectedChildForAnnouncements);
   const childAttendance = attendance.filter(att => selectedChildForAttendance === '' || att.child_name === selectedChildForAttendance);
+  const childSubmissions = submissions.filter(sub => selectedChildForSubmissions === '' || sub.student_name === selectedChildForSubmissions);
 
   const handleChatUnreadUpdate = useCallback((count: number) => {
     setChatUnreadCount(count);
@@ -215,10 +234,11 @@ export default function ParentDashboard() {
     
   
     try {
-      const [childrenData, announcementsData, attendanceData] = await Promise.all([
+      const [childrenData, announcementsData, attendanceData, submissionsData] = await Promise.all([
         parentApi.getChildren(),
         parentApi.getAnnouncements(),
         parentApi.getAttendance(),
+        parentApi.getSubmissions(),
       ]);
       setChildren(childrenData);
       console.log('Children API response:', childrenData);
@@ -227,6 +247,7 @@ export default function ParentDashboard() {
       console.log('Number of children received:', childrenData?.length || 0);
       setAnnouncements(announcementsData);
       setAttendance(attendanceData);
+      setSubmissions(submissionsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -877,6 +898,114 @@ childAttendance.map((childData) => (
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {activeTab === 'child-submissions' && (
+          <Card className="mt-6 bg-white dark:bg-zinc-900 border dark:border-zinc-800 shadow-lg">
+            <CardHeader className="border-b dark:border-zinc-800 pb-4">
+              <CardTitle className="text-xl font-bold dark:text-white">Child Submissions</CardTitle>
+              <CardDescription className="text-sm text-muted-foreground">Review submissions your children made on exercises you assigned</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              {submissions.length === 0 ? (
+                <p className="text-muted-foreground py-4 text-center">No submissions yet</p>
+              ) : (
+                <div>
+                  <div className="border-b mb-6 dark:border-zinc-700 pb-2">
+                    <NavigationMenu>
+                      <NavigationMenuList className="flex flex-wrap gap-2">
+                        <NavigationMenuItem>
+                          <NavigationMenuLink
+                            href="#"
+                            active={selectedChildForSubmissions === ''}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setSelectedChildForSubmissions('');
+                            }}
+                            className="px-3 py-1.5 rounded-md transition-colors"
+                          >
+                            All
+                          </NavigationMenuLink>
+                        </NavigationMenuItem>
+                        {Object.keys(submissions.reduce((acc, sub) => {
+                          if (!acc[sub.student_name]) acc[sub.student_name] = true;
+                          return acc;
+                        }, {} as Record<string, boolean>)).map((childName) => (
+                          <NavigationMenuItem key={childName}>
+                            <NavigationMenuLink
+                              href="#"
+                              active={selectedChildForSubmissions === childName}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setSelectedChildForSubmissions(childName);
+                              }}
+                              className="px-3 py-1.5 rounded-md transition-colors"
+                            >
+                              {childName}
+                            </NavigationMenuLink>
+                          </NavigationMenuItem>
+                        ))}
+                      </NavigationMenuList>
+                    </NavigationMenu>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+                    {childSubmissions.length === 0 ? (
+                      <p className="text-muted-foreground py-4 text-center">No submissions for {selectedChildForSubmissions || 'any child'}</p>
+                    ) : (
+                      childSubmissions.map((submission) => (
+                        <div key={submission.id} className="p-5 border rounded-xl flex justify-between items-center dark:border-zinc-800 bg-gray-50 dark:bg-zinc-800/40 hover:bg-gray-100 dark:hover:bg-zinc-800/80 transition-all duration-250 shadow-sm">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-base text-gray-900 dark:text-zinc-100">{submission.student_name}</h3>
+                              <span className="px-2 py-0.5 bg-blue-50 dark:bg-blue-900/25 text-blue-700 dark:text-blue-300 text-xs rounded-full font-medium">
+                                Assigned Exercise
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Exercise:</span> {submission.exercise_title}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Submitted: {new Date(submission.submitted_at).toLocaleDateString()}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-4 items-center">
+                              {submission.grade !== null ? (
+                                <span className="inline-flex items-center text-sm font-semibold text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 px-2.5 py-1 rounded-lg">
+                                  Grade: {submission.grade}/20
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center text-xs font-medium text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800/80 px-2.5 py-1 rounded-lg">
+                                  Not graded yet
+                                </span>
+                              )}
+                              {submission.feedback && (
+                                <p className="text-xs text-gray-600 dark:text-gray-300 italic border-l-2 border-zinc-300 dark:border-zinc-700 pl-3">
+                                  "{submission.feedback}"
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {submission.submission_file_url && (
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => window.open(teacherApi.downloadSubmission(submission.id), '_blank')}
+                                className="bg-white dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 dark:text-white text-gray-700 border dark:border-zinc-700"
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
             </CardContent>

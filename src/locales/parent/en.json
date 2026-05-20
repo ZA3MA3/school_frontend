@@ -17,7 +17,8 @@
     "announcements": "Announcements",
     "attendanceRecords": "Attendance Records",
     "predictions": "Predictions",
-    "assignExercise": "Assign Exercise"
+    "assignExercise": "Assign Exercise",
+    "submissions": "Submissions"
   },
 "children": {
     "noChildren": "No children linked to your account yet",
