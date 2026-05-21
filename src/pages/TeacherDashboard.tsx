@@ -22,6 +22,8 @@ interface Class {
   description: string;
   teacher_name: string;
   student_count: number;
+  level_id?: number | null;
+  level_name?: string | null;
   students?: Array<{ id: number; full_name: string }>;
 }
 
@@ -50,6 +52,7 @@ interface Exercise {
   class_name: string;
   due_date: string | null;
   skills: Skill[];
+  level: string | null;
 }
 
 interface Submission {
@@ -108,6 +111,7 @@ export default function TeacherDashboard() {
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDescription, setUploadDescription] = useState('');
   const [uploadClassId, setUploadClassId] = useState('');
+  const [uploadLevelId, setUploadLevelId] = useState('');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadDueDate, setUploadDueDate] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -164,6 +168,7 @@ const [showChat, setShowChat] = useState(false);
         teacherApi.getEnrollments(),
       ]);
       setClasses(classesData);
+      console.log('Classes data:', classes);
       setExercises(exercisesData);
       //setSubmissions(submissionsData);
       setSubmissions(submissionsData.submissions || submissionsData);
@@ -202,19 +207,24 @@ const [showChat, setShowChat] = useState(false);
       formData.append('related_class', uploadClassId);
       formData.append('file_path', uploadFile);
       
-      if (uploadDueDate) {
+if (uploadDueDate) {
         formData.append('due_date', uploadDueDate);
       }
-      
+
+      if (uploadLevelId) {
+        formData.append('level_id', uploadLevelId);
+      }
+
       selectedSkills.forEach(skillId => {
         formData.append('skills', skillId.toString());
       });
 
       await teacherApi.createExercise(formData);
-      
+
       setUploadTitle('');
       setUploadDescription('');
       setUploadClassId('');
+      setUploadLevelId('');
       setUploadFile(null);
       setUploadDueDate('');
       setSelectedSkills([]);
@@ -496,8 +506,15 @@ return (
               ) : (
                 <div className="space-y-4">
                   {classes.map((cls) => (
-                    <div key={cls.id} className="p-4 border rounded-lg">
-                      <h3 className="font-medium">{cls.name}</h3>
+<div key={cls.id} className="p-4 border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium">{cls.name}</h3>
+                        {cls.level_name && (
+                          <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                            {cls.level_name}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground">{cls.description}</p>
                       <p className="text-xs text-muted-foreground mt-2">
                         {cls.student_count} students enrolled
@@ -778,10 +795,14 @@ return (
                   </div>
                   <div>
                     <Label htmlFor="class">Select Class</Label>
-                    <select
+<select
                       id="class"
                       value={uploadClassId}
-                      onChange={(e) => setUploadClassId(e.target.value)}
+                      onChange={(e) => {
+                        const selected = classes.find(c => c.id === parseInt(e.target.value));
+                        setUploadClassId(e.target.value);
+                        setUploadLevelId(selected?.level_id ? selected.level_id.toString() : '');
+                      }}
                       className="w-full p-2 border rounded-md"
                       required
                     >
@@ -849,9 +870,16 @@ return (
                   <div className="space-y-4">
                     {exercises.map((exercise) => (
                       <div key={exercise.id} className="p-4 border rounded-lg">
-                        <div className="flex justify-between items-start">
+<div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium">{exercise.title}</h3>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-medium">{exercise.title}</h3>
+                              {exercise.level && (
+                                <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                                  {exercise.level}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-sm text-muted-foreground">{exercise.description}</p>
                             <p className="text-xs text-muted-foreground mt-1">
                               Class: {exercise.class_name}

@@ -186,11 +186,12 @@ export const teacherApi = {
 // Student API functions
 export const studentApi = {
 // Get all available classes
-  getAllClasses: async (studentId?: number) => {
+  getAllClasses: async (studentId?: number, levelId?: number) => {
     const response = await apiClient.get('/users/classes/', {
       params: { 
         _t: new Date().getTime(),
-        ...(studentId ? { student_id: studentId } : {})
+        ...(studentId ? { student_id: studentId } : {}),
+        ...(levelId ? { level_id: levelId } : {}),
       }
     });
     return response.data;
@@ -261,6 +262,28 @@ export const studentApi = {
   },
   
   // Get all skills
+getSkills: async () => {
+    const response = await apiClient.get('/users/skills/');
+    return response.data;
+  },
+};
+
+// Admin API functions
+export const adminApi = {
+  getExercises: async () => {
+    const response = await apiClient.get('/users/admin/exercises/');
+    return response.data;
+  },
+
+  createExercise: async (data: FormData) => {
+    const response = await apiClient.post('/users/admin/exercises/', data, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
   getSkills: async () => {
     const response = await apiClient.get('/users/skills/');
     return response.data;
