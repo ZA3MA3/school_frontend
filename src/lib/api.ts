@@ -294,10 +294,11 @@ export const parentApi = {
   },
 
 // Get exercises that a parent can assign to their child
-  getSearchExercises: async (studentId: number, level?: string, className?: string) => {
+  getSearchExercises: async (studentId: number, level?: string, className?: string, skillIds?: string) => {
     const params: Record<string, any> = { student_id: studentId };
     if (level) params.level = level;
     if (className) params.class_name = className;
+    if (skillIds) params.skill_ids = skillIds;
     const response = await apiClient.get('/users/parent/exercises/search/', {
       params
     });

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuLink } from '@/components/ui/navigation-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Moon, Sun, Users, TrendingUp, LogOut, Bell, BookOpen, MessageSquare, UserCheck, UserX, Baby, Download } from 'lucide-react';
 import Chat from '@/components/Chat';
@@ -143,12 +143,19 @@ export default function ParentDashboard() {
   const [predictions, setPredictions] = useState<{ [studentId: number]: PredictionResult }>({});
   const [predicting, setPredicting] = useState<number | null>(null);
   const [assigningExerciseId, setAssigningExerciseId] = useState<number | null>(null);
-  const [levelFilter, setLevelFilter] = useState<string>('all');
+const [levelFilter, setLevelFilter] = useState<string>('all');
   const [classFilter, setClassFilter] = useState<string>('');
+  const [skillFilter, setSkillFilter] = useState<number[]>([]);
+  const [skillsList, setSkillsList] = useState<{ id: number; name: string }[]>([]);
 
 const fetchAssignableExercises = async (studentId: number) => {
     try {
-      const data = await parentApi.getSearchExercises(studentId, levelFilter === 'all' ? undefined : levelFilter, classFilter || undefined);
+      const data = await parentApi.getSearchExercises(
+        studentId,
+        levelFilter === 'all' ? undefined : levelFilter,
+        classFilter || undefined,
+        skillFilter.length > 0 ? skillFilter.join(',') : undefined
+      );
       setAssignableExercises(data);
     } catch (error) {
       console.error('Error fetching assignable exercises:', error);
@@ -158,17 +165,21 @@ const fetchAssignableExercises = async (studentId: number) => {
     }
   };
 
-  useEffect(() => {
+useEffect(() => {
     if (children.length > 0 && !selectedChildForAssign) {
       setSelectedChildForAssign(children[0].id.toString());
     }
   }, [children, selectedChildForAssign]);
 
+  useEffect(() => {
+    teacherApi.getSkills().then(setSkillsList).catch(() => {});
+  }, []);
+
 useEffect(() => {
     if (selectedChildForAssign) {
       fetchAssignableExercises(parseInt(selectedChildForAssign));
     }
-  }, [selectedChildForAssign, levelFilter, classFilter]);
+  }, [selectedChildForAssign, levelFilter, classFilter, skillFilter]);
 
 
 
@@ -880,6 +891,34 @@ childAttendance.map((childData) => (
                   <SelectItem value="3AS">3AS</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="flex flex-col">
+              <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Skills</label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-[180px] justify-between bg-white dark:bg-zinc-800">
+                    {skillFilter.length > 0 ? `${skillFilter.length} skill(s) selected` : 'Filter by skills'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[180px]">
+                  {skillsList.map(skill => (
+                    <DropdownMenuCheckboxItem
+                      key={skill.id}
+                      checked={skillFilter.includes(skill.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSkillFilter([...skillFilter, skill.id]);
+                        } else {
+                          setSkillFilter(skillFilter.filter(id => id !== skill.id));
+                        }
+                      }}
+                    >
+                      {skill.name}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             <div className="flex flex-col w-54">
               <label className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Class Name</label>
