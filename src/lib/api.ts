@@ -284,8 +284,21 @@ export const adminApi = {
     return response.data;
   },
 
-  getSkills: async () => {
+getSkills: async () => {
     const response = await apiClient.get('/users/skills/');
+    return response.data;
+  },
+
+  getExerciseRequests: async () => {
+    const response = await apiClient.get('/users/admin/exercises/moderate/');
+    return response.data;
+  },
+
+  respondToExerciseRequest: async (exerciseId: number, action: 'approve' | 'reject') => {
+    const response = await apiClient.patch('/users/admin/exercises/moderate/', {
+      exercise_id: exerciseId,
+      action: action,
+    });
     return response.data;
   },
 };

@@ -37,9 +37,20 @@ interface ClassItem {
   student_count: number;
 }
 
+interface ExerciseRequest {
+  id: number;
+  title: string;
+  description: string;
+  teacher_name: string;
+  class_name: string;
+  status: string;
+  created_at: string;
+}
+
 const TABS = [
   { id: 'overview', label: 'Overview' },
   { id: 'exercises', label: 'Exercises' },
+  { id: 'exercise-requests', label: 'Exercise Requests' },
 ] as const;
 
 const LEVELS = [
@@ -76,6 +87,8 @@ export default function AdminDashboard() {
   const [selectedSkills, setSelectedSkills] = useState<number[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [exerciseRequests, setExerciseRequests] = useState<ExerciseRequest[]>([]);
+  const [respondingExercise, setRespondingExercise] = useState<number | null>(null);
 
   const { unreadCount, refresh: refreshNotifications } = useNotificationWebSocket(() => {});
 
@@ -85,12 +98,14 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      const [exercisesData, skillsData] = await Promise.all([
+      const [exercisesData, skillsData,requestsData] = await Promise.all([
         adminApi.getExercises(),
         adminApi.getSkills(),
+        adminApi.getExerciseRequests(),
       ]);
       setExercises(exercisesData);
       setSkills(skillsData);
+      setExerciseRequests(requestsData);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -111,6 +126,28 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchClasses(uploadLevelId || undefined);
   }, [uploadLevelId]);
+
+  const fetchExerciseRequests = async () => {
+    try {
+      const data = await adminApi.getExerciseRequests();
+      setExerciseRequests(data);
+    } catch (error) {
+      console.error('Error fetching exercise requests:', error);
+    }
+  };
+
+  const handleRespondToExercise = async (exerciseId: number, action: 'approve' | 'reject') => {
+    setRespondingExercise(exerciseId);
+    try {
+      await adminApi.respondToExerciseRequest(exerciseId, action);
+      fetchExerciseRequests();
+    } catch (error) {
+      console.error('Error responding to exercise:', error);
+      alert('Failed to respond to exercise request');
+    } finally {
+      setRespondingExercise(null);
+    }
+  };
 
   const handleFileUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -474,6 +511,59 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {activeTab === 'exercise-requests' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Exercise Requests</CardTitle>
+              <CardDescription>Pending exercises from teachers awaiting your approval</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {exerciseRequests.length === 0 ? (
+                <p className="text-muted-foreground">No pending exercise requests</p>
+              ) : (
+                <div className="space-y-4">
+                  {exerciseRequests.map((req) => (
+                    <div key={req.id} className="p-4 border rounded-lg dark:border-zinc-700">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{req.title}</h3>
+                          <p className="text-sm text-muted-foreground">{req.description}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Teacher: {req.teacher_name} | Class: {req.class_name}
+                          </p>
+                          {req.created_at && (
+                            <p className="text-xs text-muted-foreground">
+                              Requested: {new Date(req.created_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleRespondToExercise(req.id, 'approve')}
+                            disabled={respondingExercise === req.id}
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRespondToExercise(req.id, 'reject')}
+                            disabled={respondingExercise === req.id}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </main>
     </div>

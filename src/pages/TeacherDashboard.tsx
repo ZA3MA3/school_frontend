@@ -53,6 +53,7 @@ interface Exercise {
   due_date: string | null;
   skills: Skill[];
   level: string | null;
+  status: string;
 }
 
 interface Submission {
@@ -168,7 +169,7 @@ const [showChat, setShowChat] = useState(false);
         teacherApi.getEnrollments(),
       ]);
       setClasses(classesData);
-      console.log('Classes data:', classes);
+      console.log('Classes data:', classesData);
       setExercises(exercisesData);
       //setSubmissions(submissionsData);
       setSubmissions(submissionsData.submissions || submissionsData);
@@ -803,7 +804,7 @@ return (
                         setUploadClassId(e.target.value);
                         setUploadLevelId(selected?.level_id ? selected.level_id.toString() : '');
                       }}
-                      className="w-full p-2 border rounded-md"
+                      className="w-full p-2 border rounded-md dark:bg-zinc-800 dark:text-white dark:border-zinc-700"
                       required
                     >
                       <option value="">Select a class</option>
@@ -877,6 +878,11 @@ return (
                               {exercise.level && (
                                 <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/35 text-blue-800 dark:text-blue-200 text-xs rounded-full">
                                   {exercise.level}
+                                </span>
+                              )}
+                              {exercise.status === 'REJECTED' && (
+                                <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/35 text-red-800 dark:text-red-200 text-xs rounded-full font-medium">
+                                  Rejected
                                 </span>
                               )}
                             </div>
