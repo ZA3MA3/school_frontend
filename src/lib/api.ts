@@ -196,6 +196,12 @@ export const studentApi = {
     });
     return response.data;
   },
+
+  getAllClassesPublic: async (levelId?: number) => {
+    // Create a separate axios instance without auth, or use fetch
+    const response = await fetch(`${API_BASE_URL}/users/classes/public/?level_id=${levelId || ''}`);
+    return response.json();
+  },
   
 // Enroll in a class
   enrollInClass: async (classTeacherId: number, studentId?: number) => {
@@ -446,12 +452,12 @@ export const otpApi = {
   },
   
   // Create teacher profile with class
-  createTeacherProfile: async (hireDate: string, specialization: string, className: string, classDescription: string) => {
+  createTeacherProfile: async (hireDate: string, specialization: string, levelId: string, classId: string) => {
     const response = await apiClient.post('/users/profile/teacher/', {
       hire_date: hireDate,
       specialization: specialization,
-      class_name: className,
-      class_description: classDescription,
+      level_id: levelId,    
+      class_id: classId, 
     });
     return response.data;
   },
