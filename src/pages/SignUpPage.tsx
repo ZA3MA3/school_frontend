@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { GraduationCap, Loader2, Moon, Sun, Plus, Trash2 } from 'lucide-react';
+import { GraduationCap, Loader2, Moon, Sun, Plus, Trash2, BookOpen } from 'lucide-react';
 import { studentApi } from '@/lib/api';
 
 interface ClassItem {
@@ -319,6 +319,7 @@ export default function SignUpPage() {
       // ─────────────────────────────────────────────
       case 'details':
         return (
+       
           <Card className="w-full max-w-md dark:bg-zinc-800 relative z-10">
             <CardHeader className="space-y-1">
               <div className="flex items-center justify-center mb-4">
@@ -838,6 +839,71 @@ export default function SignUpPage() {
 
   return (
     <>
+      {/* ✅ Add animation styles */}
+      <style>{`
+        .lines {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 100%;
+          margin: auto;
+          width: 90vw;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .line {
+          position: absolute;
+          width: 1px;
+          height: 100%;
+          top: 0;
+          left: 50%;
+          background: rgba(0, 0, 0, 0.1);
+          overflow: hidden;
+        }
+        .dark .line {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        .line::after {
+          content: '';
+          display: block;
+          position: absolute;
+          height: 15vh;
+          width: 100%;
+          top: -50%;
+          left: 0;
+          background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, #000000 75%, #000000 100%);
+          animation: drop 7s 0s infinite;
+          animation-fill-mode: forwards;
+          animation-timing-function: cubic-bezier(0.4, 0.26, 0, 0.97);
+        }
+        .dark .line::after {
+          background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, #ffffff 75%, #ffffff 100%);
+        }
+        .line:nth-child(1) {
+          margin-left: -25%;
+        }
+        .line:nth-child(1)::after {
+          animation-delay: 2s;
+        }
+        .line:nth-child(3) {
+          margin-left: 25%;
+        }
+        .line:nth-child(3)::after {
+          animation-delay: 2.5s;
+        }
+        @keyframes drop {
+          0% { top: -50%; }
+          100% { top: 110%; }
+        }
+      `}</style>
+      <Link to="/" className="absolute top-6 left-6 z-20 flex items-center gap-2 hover:opacity-80 transition-opacity">
+      <BookOpen className="h-8 w-8 text-primary" strokeWidth={1.5} />
+      <span className="text-2xl font-extrabold tracking-tighter uppercase dark:text-white text-gray-900">
+        Mouktassab
+      </span>
+    </Link>
+
       {/* Theme toggle */}
       <div className="fixed top-4 right-4 z-50">
         <Button
@@ -849,7 +915,17 @@ export default function SignUpPage() {
         </Button>
       </div>
 
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 p-4">
+      {/* ✅ Main container with animation lines */}
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 p-4 relative overflow-hidden">
+        
+        {/* ✅ Add the lines divs */}
+        <div className="lines">
+          <div className="line"></div>
+          <div className="line"></div>
+          <div className="line"></div>
+        </div>
+
+        {/* Render the step card */}
         {renderStep()}
       </div>
     </>

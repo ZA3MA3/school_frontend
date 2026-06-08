@@ -17,7 +17,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Eye, EyeOff, GraduationCap, Loader2, Moon, Sun } from 'lucide-react';
+import { Eye, EyeOff, GraduationCap, Loader2, Moon, Sun, BookOpen } from 'lucide-react';
 import { otpApi } from '@/lib/api';
 
 type LoginMethod = 'email' | 'phone';
@@ -310,6 +310,14 @@ export default function LoginPage() {
           <div className="line"></div>
           <div className="line"></div>
         </div>
+
+        <Link to="/" className="absolute top-6 left-6 z-20 flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <BookOpen className="h-8 w-8 text-primary" strokeWidth={1.5} />
+          <span className="text-2xl font-extrabold tracking-tighter uppercase dark:text-white text-gray-900">
+            Mouktassab
+          </span>
+        </Link>
+
         <div className="absolute top-4 right-4 flex gap-2 z-10">
           <Button
             variant="outline"
