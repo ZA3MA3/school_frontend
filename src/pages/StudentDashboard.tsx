@@ -247,7 +247,6 @@ const handleEnroll = async (classTeacherId: number) => {
   const flattenToClassCards = (): ClassCard[] => {
     const cards: ClassCard[] = [];
     for (const cls of classes) {
-      const status = cls.enrollment_status?.status || null;
       if (cls.teachers.length === 0) {
         cards.push({
           classId: cls.id,
@@ -258,10 +257,16 @@ const handleEnroll = async (classTeacherId: number) => {
           teacherId: 0,
           level: null,
           studentCount: cls.student_count,
-          enrollmentStatus: status,
+          enrollmentStatus: null,  // No teacher = no enrollment possible
         });
       } else {
         for (const teacher of cls.teachers) {
+          // ✅ Match enrollment status by class_teacher_id
+          let enrollmentStatus = null;
+          if (cls.enrollment_status && cls.enrollment_status.class_teacher_id === teacher.class_teacher_id) {
+            enrollmentStatus = cls.enrollment_status.status;
+          }
+          
           cards.push({
             classId: cls.id,
             classTeacherId: teacher.class_teacher_id,
@@ -271,7 +276,7 @@ const handleEnroll = async (classTeacherId: number) => {
             teacherId: teacher.id,
             level: teacher.level,
             studentCount: cls.student_count,
-            enrollmentStatus: status,
+            enrollmentStatus: enrollmentStatus,  // ✅ Now per teacher!
           });
         }
       }

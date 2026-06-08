@@ -316,8 +316,8 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 <section className="container mx-auto px-6 py-40 flex flex-col-reverse lg:flex-row items-center gap-24">
   <div className="flex-1 w-full flex justify-center lg:justify-end">
     {/* App Mockup Image Placeholder */}
-    <div className="w-full max-w-[340px] aspect-[9/16] bg-[#0a0a0a] border border-white/10 relative overflow-hidden group">
-      
+    <div className="w-full max-w-[360px]   aspect-[9/16] bg-[#0a0a0a] border border-white/10 relative overflow-hidden group">
+      {/* h-[810px]*/}
       {/* ✅ Image Container - Add this */}
       <img 
         src={appImages[appIndex]} 
