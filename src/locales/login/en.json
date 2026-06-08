@@ -8,5 +8,14 @@
   "placePassword":"Enter your password" ,
   "loggingIn": "Logging in...",
   "error": "Invalid email or password",
-  "footer": "Don't have an account? Contact the school"
+  "footer": "Don't have an account? Contact the school",
+  "phone":"Phone",
+  "phoneNumber":"Phone Number",
+  "verifyAndLogin":"Verify & Login",
+  "sendCode":"Send Code",
+  "withGoogle":"Sign in with Google",
+  "dontHave":"Don't have an account? Sign up"
+  
+
+
 }

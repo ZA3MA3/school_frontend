@@ -296,6 +296,7 @@ if (uploadDueDate) {
     try {
       const data = await teacherApi.getAttendance(parseInt(attendanceClassId), attendanceDate);
       setExistingAttendance(data);
+      console.log("attendance",data)
       
       const records: Record<number, 'PRESENT' | 'ABSENT'> = {};
       data.forEach((rec: AttendanceRecord) => {

@@ -7,11 +7,19 @@ import { Input } from '@/components/ui/input';
 import { useIsAuthenticated } from '@/stores/authStore';
 import { useTranslation } from 'react-i18next';
 import  TypeWriter  from '@/components/TypeWriter.tsx'
+import slide1 from '@/assets/parent_dashboard.png';
+import slide2 from '@/assets/student_dashboard.png';
+import slide3 from '@/assets/teacher_dashboard.png';
+import appScreenshot2 from '@/assets/Notifications.jpg';
+import appScreenshot1 from '@/assets/login.jpg';
+import appScreenshot3 from '@/assets/chat.jpg';
 
 export default function LandingPage() {
   const isAuthenticated = useIsAuthenticated();
   const { t, i18n } = useTranslation();
-  
+
+  const appImages = [appScreenshot1, appScreenshot2, appScreenshot3];
+  const heroImages = [slide1, slide2, slide3];
   const [heroIndex, setHeroIndex] = useState(0);
   const [showTopBtn, setShowTopBtn] = useState(false);
   const [contactName, setContactName] = useState('');
@@ -163,7 +171,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
         <nav className="container mx-auto px-6 py-6 flex items-center justify-between relative z-10">
           <div className="flex items-center space-x-3">
             <BookOpen className="h-8 w-8 text-white" strokeWidth={1.5} />
-            <span className="text-2xl font-extrabold tracking-tighter uppercase">SmartSchool</span>
+            <span className="text-2xl font-extrabold tracking-tighter uppercase">Mouktassab</span>
           </div>
           <div className="flex items-center space-x-8">
             <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}>
@@ -185,7 +193,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
             </Link>
             <Link to="/signup">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-none px-8 h-12 uppercase tracking-widest text-xs font-bold transition-all">
-              Sign Up
+              {t('landing.signUp')}
               </Button>
             </Link>
           </div>
@@ -218,27 +226,45 @@ const handleContactSubmit = async (e: React.FormEvent) => {
           </div>
           
           <div className="w-full max-w-6xl mt-16 relative">
-          {/* Hero Image Placeholder */}
-          <div className="w-full aspect-[21/9] bg-[#0a0a0a] border border-white/10 flex items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-white/[0.02] group-hover:bg-white/[0.04] transition-colors duration-700" />
-            
-            <button onClick={prevHero} className="absolute left-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
-              <ChevronLeft className="h-8 w-8" />
-            </button>
-            <button onClick={nextHero} className="absolute right-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
-              <ChevronRight className="h-8 w-8" />
-            </button>
+         
+          <div className="w-full aspect-[16/9] bg-[#0a0a0a] border border-white/10 flex items-center justify-center relative overflow-hidden group">
+  
+  {/* ✅ Image Container - Place this first */}
+  <img 
+    src={heroImages[heroIndex]} 
+    alt={`Hero slide ${heroIndex + 1}`}
+    className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+  />
 
-            <div className="flex flex-col items-center text-white/30 space-y-4 z-10 text-center px-4">
-              <span className="text-sm md:text-lg uppercase tracking-[0.3em] font-light">[ Hero Video / Dashboard Image {heroIndex + 1} ]</span>
-            </div>
+  {/* Overlay gradient for better text readability (optional) */}
+  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-              {Array.from({ length: heroImagesCount }).map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all ${i === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/30'}`} />
-              ))}
-            </div>
-          </div>
+  {/* Navigation Buttons */}
+  <button onClick={prevHero} className="absolute left-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+    <ChevronLeft className="h-8 w-8" />
+  </button>
+  <button onClick={nextHero} className="absolute right-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+    <ChevronRight className="h-8 w-8" />
+  </button>
+
+   
+{/*  <div className="flex flex-col items-center text-white/30 space-y-4 z-10 text-center px-4">
+    <span className="text-sm md:text-lg uppercase tracking-[0.3em] font-light">
+      [ Hero {heroIndex + 1} ]
+    </span>
+  </div>*/}
+
+  {/* Dots Indicator */}
+  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+    {Array.from({ length: heroImagesCount }).map((_, i) => (
+      <div 
+        key={i} 
+        className={`h-1.5 rounded-full transition-all cursor-pointer ${i === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/30'}`}
+        onClick={() => setHeroIndex(i)}
+      />
+    ))}
+  </div>
+</div>
         </div>
       </section>
 
@@ -287,42 +313,62 @@ const handleContactSubmit = async (e: React.FormEvent) => {
       </section>
 
       {/* Mobile App Section */}
-      <section className="container mx-auto px-6 py-40 flex flex-col-reverse lg:flex-row items-center gap-24">
-        <div className="flex-1 w-full flex justify-center lg:justify-end">
-          {/* App Mockup Image Placeholder */}
-          <div className="w-full max-w-[340px] aspect-[9/16] bg-[#0a0a0a] border border-white/10 flex items-center justify-center relative overflow-hidden group">
-            
-            <button onClick={prevApp} className="absolute left-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <button onClick={nextApp} className="absolute right-4 z-20 p-2 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
-              <ChevronRight className="h-6 w-6" />
-            </button>
+<section className="container mx-auto px-6 py-40 flex flex-col-reverse lg:flex-row items-center gap-24">
+  <div className="flex-1 w-full flex justify-center lg:justify-end">
+    {/* App Mockup Image Placeholder */}
+    <div className="w-full max-w-[340px] aspect-[9/16] bg-[#0a0a0a] border border-white/10 relative overflow-hidden group">
+      
+      {/* ✅ Image Container - Add this */}
+      <img 
+        src={appImages[appIndex]} 
+        alt={`App screenshot ${appIndex + 1}`}
+        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500"
+      />
 
-             <div className="flex flex-col items-center text-white/30 space-y-4 text-center px-6 z-10">
-              <span className="text-xs uppercase tracking-[0.3em] font-light">[ Mobile App {appIndex + 1} ]</span>
-            </div>
+      {/* Optional: Dark overlay for better text visibility */}
+      <div className="absolute inset-0 bg-black/20" />
 
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-              {Array.from({ length: appImagesCount }).map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all ${i === appIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/30'}`} />
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="flex-1 space-y-12">
-          <h2 className="text-6xl md:text-[6rem] font-black leading-[0.95] tracking-tighter uppercase">
-            {t('landing.school')}. <br/> <span className="text-white/40">{t('landing.anywhere')}.</span>
-          </h2>
-          <p className="text-2xl text-white/50 font-light leading-relaxed max-w-xl">
-          {t('landing.schoolAnywhereD')}
-          </p>
-          <div className="pt-6">
+      {/* Navigation Buttons */}
+      <button onClick={prevApp} className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+        <ChevronLeft className="h-5 w-5" />
+      </button>
+      <button onClick={nextApp} className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-1.5 rounded-full bg-black/50 text-white/50 hover:text-white hover:bg-black/80 transition-all opacity-0 group-hover:opacity-100">
+        <ChevronRight className="h-5 w-5" />
+      </button>
+
+      {/* Text Overlay (optional - can remove if images speak for themselves) */}
+      <div className="absolute bottom-20 left-0 right-0 text-center z-10 px-4">
+        <span className="text-white/40 text-xs uppercase tracking-[0.3em] font-light bg-black/30 px-3 py-1 rounded-full">
+          {appIndex + 1} / {appImagesCount}
+        </span>
+      </div>
+
+      {/* Dots Indicator */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+        {Array.from({ length: appImagesCount }).map((_, i) => (
+          <button 
+            key={i} 
+            onClick={() => setAppIndex(i)}
+            className={`h-1 rounded-full transition-all cursor-pointer ${i === appIndex ? 'w-4 bg-white' : 'w-1.5 bg-white/30'}`}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+  
+  <div className="flex-1 space-y-12">
+    <h2 className="text-6xl md:text-[6rem] font-black leading-[0.95] tracking-tighter uppercase">
+      {t('landing.school')}. <br/> 
+      <span className="text-white/40">{t('landing.anywhere')}.</span>
+    </h2>
+    <p className="text-2xl text-white/50 font-light leading-relaxed max-w-xl">
+      {t('landing.schoolAnywhereD')}
+    </p>
+    <div className="pt-6">
             <Button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white h-16 px-10 rounded-none flex items-center gap-5 transition-all">
              
               <div className="flex flex-col items-start">
-              {/*  <span className="text-[10px] font-bold text-white/50 uppercase tracking-[0.2em] leading-none mb-1">Get it on</span>
-                <span className="font-extrabold text-xl leading-none uppercase tracking-wide">Google Play</span>*/ }
+             
                   <img 
                        src="src/assets/google_play.webp" 
                        alt="Get it on Google Play"
@@ -331,8 +377,8 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               </div>
             </Button>
           </div>
-        </div>
-      </section>
+  </div>
+</section>
 
       {/* Contact Section */}
       <section id="contact" className="container mx-auto px-6 py-25  pb-5 border-t border-white/10">
@@ -404,10 +450,10 @@ const handleContactSubmit = async (e: React.FormEvent) => {
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center space-x-3">
             <BookOpen className="h-6 w-6 text-white" strokeWidth={1.5} />
-            <span className="text-xl font-black text-white tracking-tighter uppercase">SmartSchool</span>
+            <span className="text-xl font-black text-white tracking-tighter uppercase">Mouktassab</span>
           </div>
           <p className="text-white/30 text-xs font-bold tracking-[0.15em] uppercase">
-            © {new Date().getFullYear()} SmartSchool. All Rights Reserved.
+            © {new Date().getFullYear()} Mouktassab. All Rights Reserved.
           </p>
         </div>
       </footer>

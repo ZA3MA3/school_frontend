@@ -382,7 +382,7 @@ return (
               <div className="text-2xl font-bold">
                 {classCards.filter((card) => card.enrollmentStatus === 'APPROVED').length}
               </div>
-              <p className="text-xs text-muted-foreground">Enrolled in</p>
+              <p className="text-xs text-muted-foreground"> Enrolled in</p>
             </CardContent>
           </Card>
 

@@ -24,5 +24,6 @@
   "email":"Email",
   "message":"Message",
   "sendMessage":"Send Message",
-  "sending":"sending"
+  "sending":"sending",
+  "signUp":"Sign Up"
 }
