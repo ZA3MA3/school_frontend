@@ -13,6 +13,7 @@ import slide3 from '@/assets/teacher_dashboard.png';
 import appScreenshot2 from '@/assets/Notifications.jpg';
 import appScreenshot1 from '@/assets/login.jpg';
 import appScreenshot3 from '@/assets/chat.jpg';
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export default function LandingPage() {
   const isAuthenticated = useIsAuthenticated();
@@ -73,7 +74,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
 
     setContactStatus('loading');
     try {
-      const res = await fetch('http://localhost:8000/api/users/contact/', {
+      const res = await fetch(`${VITE_API_URL}/users/contact/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
