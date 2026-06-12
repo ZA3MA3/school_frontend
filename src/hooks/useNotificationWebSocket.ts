@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { notificationApi } from '@/lib/api';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 
 export function useNotificationWebSocket(onChatUnreadUpdate?: (count: number) => void) {
@@ -31,7 +31,7 @@ export function useNotificationWebSocket(onChatUnreadUpdate?: (count: number) =>
       }
 
       try {
-        const response = await fetch(`${API_BASE_URL}/api/users/ws-ticket/`, {
+        const response = await fetch(`${API_BASE_URL}/users/ws-ticket/`, {
           method: 'POST',
           credentials: 'include',
         });
