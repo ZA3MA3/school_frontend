@@ -36,10 +36,10 @@ interface StudentData {
 }
 
 export default function SignUpPage() {
-  const { t, i18n } = useTranslation();
+  //const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
+  //const { login } = useAuth();
 
   const [step, setStep] = useState<SignUpStep>('details');
   const [firstName, setFirstName] = useState('');

@@ -25,6 +25,7 @@ interface Class {
   student_count: number;
   enrollment_status: {
     status: 'PENDING' | 'APPROVED' | 'REJECTED' | null;
+    class_teacher_id:number;
     requested_at: string | null;
     responded_at: string | null;
   } | null;
