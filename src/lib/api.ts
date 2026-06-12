@@ -242,9 +242,32 @@ export const studentApi = {
     return response.data;
   },
   
-  // Download exercise file
+// Download exercise file (returns URL for window.open)
   downloadExercise: (exerciseId: number) => {
     return `${API_BASE_URL}/users/exercises/${exerciseId}/download/`;
+  },
+
+  // Download exercise file as blob (for authenticated downloads)
+  downloadExerciseBlob: async (exerciseId: number) => {
+    const response = await fetch(`${API_BASE_URL}/users/exercises/${exerciseId}/download/`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Download failed');
+    }
+
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = `exercise-${exerciseId}`;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=(?:(\\?['"])(.*?)\1|[^;\n]*)/);
+      if (match) {
+        filename = match[2] || match[1] || filename;
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
   },
   
   // Download submission file
