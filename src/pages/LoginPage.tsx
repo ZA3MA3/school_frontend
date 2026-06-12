@@ -159,6 +159,7 @@ export default function LoginPage() {
       setIsSubmitting(true);
       try {
         const data = await otpApi.googleLoginOnly(credentialResponse.access_token);
+        console.log('1. Google login response:', data);
 
         authStore.login({
           id: data.user?.id || 0,
@@ -169,10 +170,13 @@ export default function LoginPage() {
           roles: data.roles || [],
         });
 
+        console.log('2. Auth store updated');
+
         await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
           const subData = await otpApi.getSubscriptionStatus();
+          console.log('4. Subscription data:', subData);
           if (!subData.is_active_subscription) {
             setUserRoles(subData.roles || []);
             setNeedsSubscription(true);
