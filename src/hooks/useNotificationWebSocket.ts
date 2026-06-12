@@ -3,6 +3,7 @@ import { notificationApi } from '@/lib/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+console.log("WS_BASE_URL",WS_BASE_URL)
 
 export function useNotificationWebSocket(onChatUnreadUpdate?: (count: number) => void) {
   const [unreadCount, setUnreadCount] = useState(0);
