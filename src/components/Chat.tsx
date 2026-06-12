@@ -28,6 +28,8 @@ interface ChatProps {
   onUnreadCountChange?: (count: number) => void;
 }
 
+const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
+
 export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
   const { t } = useTranslation();
   const { user, activeRole } = useAuth();
@@ -149,7 +151,7 @@ export default function Chat({ onClose, onUnreadCountChange }: ChatProps) {
         const ticket = await chatApi.getWsTicket();
         if (cancelled) return;
 
-        const ws = new WebSocket(`ws://localhost:8000/ws/chat/?ticket=${ticket}`);
+        const ws = new WebSocket(`${WS_BASE_URL}/ws/chat/?ticket=${ticket}`);
 
         ws.onopen = () => {
           if (cancelled) { ws.close(); return; }

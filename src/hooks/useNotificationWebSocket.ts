@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { notificationApi } from '@/lib/api';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 
 export function useNotificationWebSocket(onChatUnreadUpdate?: (count: number) => void) {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -37,7 +38,7 @@ export function useNotificationWebSocket(onChatUnreadUpdate?: (count: number) =>
         const data = await response.json();
         const ticket = data.ticket;
 
-        const ws = new WebSocket(`ws://localhost:8000/ws/notifications/?ticket=${ticket}`);
+        const ws = new WebSocket(`${WS_BASE_URL}/ws/notifications/?ticket=${ticket}`);
 
         ws.onopen = () => {
           console.log('Notification WebSocket connected');
