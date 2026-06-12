@@ -104,6 +104,7 @@ export default function AdminDashboard() {
         adminApi.getExerciseRequests(),
       ]);
       setExercises(exercisesData);
+      console.log('exercises',exercisesData);
       setSkills(skillsData);
       setExerciseRequests(requestsData);
     } catch (error) {

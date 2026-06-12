@@ -220,6 +220,15 @@ if (uploadDueDate) {
         formData.append('skills', skillId.toString());
       });
 
+      console.log('title', uploadTitle);
+      console.log('description', uploadDescription);
+      console.log('related_class', uploadClassId);
+      console.log('file_path', uploadFile);
+      console.log('selectedSkills', selectedSkills);
+      console.log('uploadLevelId', uploadLevelId );
+
+
+
       await teacherApi.createExercise(formData);
 
       setUploadTitle('');
