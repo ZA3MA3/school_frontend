@@ -499,7 +499,21 @@ export default function AdminDashboard() {
                             )}
                           </div>
                           {exercise.file_url && (
-                            <Button variant="outline" size="sm" onClick={() => window.open(studentApi.downloadExercise(exercise.id), '_blank')}>
+                            <Button variant="outline" size="sm" onClick={async () => {
+                              try {
+                                const { blob, filename } = await studentApi.downloadExerciseBlob(exercise.id);
+                                const url = window.URL.createObjectURL(blob);
+                                const a = document.createElement('a');
+                                a.href = url;
+                                a.download = filename;
+                                document.body.appendChild(a);
+                                a.click();
+                                a.remove();
+                                window.URL.revokeObjectURL(url);
+                              } catch (err) {
+                                console.error('Download failed', err);
+                              }
+                            }}>
                               <Download className="h-4 w-4 mr-2" />
                               Download
                             </Button>

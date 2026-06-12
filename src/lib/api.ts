@@ -139,11 +139,34 @@ export const teacherApi = {
     return response.data;
   },
   
-  // Download submission file
-  downloadSubmission: (submissionId: number) => {
-    return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
+// Download submission file (returns URL for window.open)
+ // downloadSubmission: (submissionId: number) => {
+   // return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
+  //},
+
+  // Download submission file as blob (for authenticated downloads)
+  downloadSubmissionBlob: async (submissionId: number) => {
+    const response = await fetch(`${API_BASE_URL}/users/submissions/${submissionId}/download/`, {
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Download failed');
+    }
+
+    const contentDisposition = response.headers.get('content-disposition');
+    let filename = `submission-${submissionId}`;
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename[^;=\n]*=(?:(\\?['"])(.*?)\1|[^;\n]*)/);
+      if (match) {
+        filename = match[2] || match[1] || filename;
+      }
+    }
+
+    const blob = await response.blob();
+    return { blob, filename };
   },
-  
+   
   // Grade a submission
   gradeSubmission: async (submissionId: number, grade: number, feedback: string) => {
     const response = await apiClient.patch(`/users/submissions/${submissionId}/grade/`, {
@@ -243,9 +266,9 @@ export const studentApi = {
   },
   
 // Download exercise file (returns URL for window.open)
-  downloadExercise: (exerciseId: number) => {
-    return `${API_BASE_URL}/users/exercises/${exerciseId}/download/`;
-  },
+  //downloadExercise: (exerciseId: number) => {
+    //return `${API_BASE_URL}/users/exercises/${exerciseId}/download/`;
+  //},
 
   // Download exercise file as blob (for authenticated downloads)
   downloadExerciseBlob: async (exerciseId: number) => {
@@ -271,9 +294,9 @@ export const studentApi = {
   },
   
   // Download submission file
-  downloadSubmission: (submissionId: number) => {
-    return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
-  },
+  //downloadSubmission: (submissionId: number) => {
+   // return `${API_BASE_URL}/users/submissions/${submissionId}/download/`;
+ // },
   
 // Get student's announcements
   getAnnouncements: async (studentId?: number) => {

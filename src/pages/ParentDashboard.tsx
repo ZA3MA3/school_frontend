@@ -1081,11 +1081,25 @@ childAttendance.map((childData) => (
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            {submission.submission_file_url && (
-                              <Button 
-                                variant="outline" 
-                                size="sm" 
-                                onClick={() => window.open(teacherApi.downloadSubmission(submission.id), '_blank')}
+{submission.submission_file_url && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    const { blob, filename } = await teacherApi.downloadSubmissionBlob(submission.id);
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = filename;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    a.remove();
+                                    window.URL.revokeObjectURL(url);
+                                  } catch (err) {
+                                    console.error('Download failed', err);
+                                  }
+                                }}
                                 className="bg-white dark:bg-zinc-800 hover:bg-gray-100 dark:hover:bg-zinc-700 dark:text-white text-gray-700 border dark:border-zinc-700"
                               >
                                 <Download className="h-4 w-4 mr-2" />

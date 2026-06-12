@@ -180,12 +180,7 @@ const handleEnroll = async (classTeacherId: number) => {
       console.log(`[DEBUG] Clearing enrolling state for classTeacherId: ${classTeacherId}`);
       setEnrolling(null);
     }
-  };
-
-  const handleDownload = (exerciseId: number) => {
-    const downloadUrl = studentApi.downloadExercise(exerciseId);
-    window.open(downloadUrl, '_blank');
-  };
+};
 
   const handleSubmitFile = async (exerciseId: number) => {
     if (!submitFile) return;
@@ -741,9 +736,23 @@ return (
                             )}
                           </div>
                           <div className="flex flex-col gap-2">
-                            {exercise.file_url && (
+{exercise.file_url && (
                               <Button
-                                onClick={() => handleDownload(exercise.id)}
+                                onClick={async () => {
+                                  try {
+                                    const { blob, filename } = await studentApi.downloadExerciseBlob(exercise.id);
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a');
+                                    a.href = url;
+                                    a.download = filename;
+                                    document.body.appendChild(a);
+                                    a.click();
+                                    a.remove();
+                                    window.URL.revokeObjectURL(url);
+                                  } catch (err) {
+                                    console.error('Download failed', err);
+                                  }
+                                }}
                                 size="sm"
                               >
                                 <Download className="h-4 w-4 mr-2" />
