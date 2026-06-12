@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+//import { useTranslation } from 'react-i18next';
 import { useTheme } from 'next-themes';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useGoogleLogin } from '@react-oauth/google';
-import { useAuth } from '@/hooks/useAuth';
+//import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -167,14 +167,14 @@ export default function SignUpPage() {
     }
   };
 
-  const goToPhoneStep = () => {
+ /* const goToPhoneStep = () => {
     if (!firstName || !lastName) {
       setError('Please fill in all required fields');
       return;
     }
     setError('');
     setStep('phone');
-  };
+  };*/
 
   const goBack = () => {
     setStep('details');
@@ -298,7 +298,7 @@ export default function SignUpPage() {
   };
 
   // Progress indicator helper
-  const getProgressLabel = () => {
+ /* const getProgressLabel = () => {
     const storedRoles: string[] = JSON.parse(
       localStorage.getItem('signup_selected_roles') || '[]'
     );
@@ -310,7 +310,7 @@ export default function SignUpPage() {
     if (step === 'teacher') return 'Teacher Information';
     if (step === 'parent') return 'Parent & Children Information';
     return '';
-  };
+  };*/
 
   const renderStep = () => {
     switch (step) {
