@@ -80,10 +80,11 @@ export function useAuth() {
     } finally {
       // Always clear local state
       store.logout();
-      navigate('/login');
-      store.setLoading(false);
+      // navigate('/login');
+      // store.setLoading(false);
+      window.location.href = '/login';
     }
-  }, [navigate, store]);
+  }, [store]);
   
   // Check if user has specific role in their roles array (for authorization)
   const hasRole = useCallback((requiredRole: UserRole | UserRole[]): boolean => {
