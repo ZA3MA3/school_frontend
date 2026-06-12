@@ -169,6 +169,8 @@ export default function LoginPage() {
           roles: data.roles || [],
         });
 
+        await new Promise(resolve => setTimeout(resolve, 100));
+
         try {
           const subData = await otpApi.getSubscriptionStatus();
           if (!subData.is_active_subscription) {
