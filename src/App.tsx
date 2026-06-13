@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect , useState} from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LandingPage from '@/pages/landingPage';
 import LoginPage from '@/pages/LoginPage';
@@ -8,12 +9,37 @@ import TeacherDashboard from '@/pages/TeacherDashboard';
 import StudentDashboard from '@/pages/StudentDashboard';
 import ParentDashboard from '@/pages/ParentDashboard';
 import { useIsAuthenticated, useActiveRole } from '@/stores/authStore';
+import  apiClient  from '@/lib/api';
 
 // Home component that redirects based on auth status and activeRole
 function HomeRedirect() {
+  const navigate = useNavigate();
   const isAuthenticated = useIsAuthenticated();
   const activeRole = useActiveRole();
+  const [restoringSession, setRestoringSession] = useState(false);
 
+
+  useEffect(() => {
+    const pendingToken = localStorage.getItem('pending_refresh_token');
+    if (pendingToken) {
+      setRestoringSession(true);
+      apiClient.post('/users/token/refresh/', { refresh_token: pendingToken })
+        .then(() => {
+          localStorage.removeItem('pending_refresh_token');
+        })
+        .catch(() => {
+          localStorage.removeItem('pending_refresh_token');
+          navigate('/login');
+        });
+    }
+  }, [navigate]);
+
+  if (restoringSession) {
+    return <div className="flex items-center justify-center min-h-screen bg-neutral-950">
+      <p className="text-neutral-400">Loading...</p>
+    </div>;
+  }
+  
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }

@@ -49,6 +49,10 @@ export default function LoginPage() {
   // The early return on line 49 (before useGoogleLogin) was causing
   // "Rendered fewer hooks than expected" because React called fewer
   // hooks when isAuthenticated was true.
+useEffect(() => {
+    localStorage.removeItem('pending_refresh_token');
+  }, []);
+
   useEffect(() => {
     if (isAuthenticated && !needsSubscription) {
       const activeRole = authStore.activeRole;
@@ -92,11 +96,12 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubscribe = async (planType: string) => {
+const handleSubscribe = async (planType: string) => {
     setIsSubmitting(true);
     try {
       const data = await otpApi.createSubscription(planType);
       if (data.checkout_url) {
+        localStorage.setItem('pending_refresh_token', data.refresh_token);
         window.location.href = data.checkout_url;
       }
     } catch (err: any) {
