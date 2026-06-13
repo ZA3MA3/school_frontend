@@ -16,7 +16,9 @@ function HomeRedirect() {
   const navigate = useNavigate();
   const isAuthenticated = useIsAuthenticated();
   const activeRole = useActiveRole();
-  const [restoringSession, setRestoringSession] = useState(false);
+  const [restoringSession, setRestoringSession] =useState(
+    () => !!localStorage.getItem('pending_refresh_token') 
+  );
 
 
   useEffect(() => {
