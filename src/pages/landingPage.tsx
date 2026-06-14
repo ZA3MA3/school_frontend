@@ -13,7 +13,7 @@ import slide3 from '@/assets/teacher_dashboard.png';
 import appScreenshot2 from '@/assets/Notifications.jpg';
 import appScreenshot1 from '@/assets/login.jpg';
 import appScreenshot3 from '@/assets/chat.jpg';
-import googlePlayButton from '@/assets/google_play.webp'
+import googlePlayButton from '@/assets/google_play.webp';
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export default function LandingPage() {
@@ -170,36 +170,49 @@ const handleContactSubmit = async (e: React.FormEvent) => {
           <div className="line"></div>
         </div>
         
-        <nav className="container mx-auto px-6 py-6 flex items-center justify-between relative z-10">
-          <div className="flex items-center space-x-3">
-            <BookOpen className="h-8 w-8 text-white" strokeWidth={1.5} />
-            <span className="text-2xl font-extrabold tracking-tighter uppercase">Mouktassab</span>
-          </div>
-          <div className="flex items-center space-x-8">
-            <Button variant="ghost" className="text-white hover:bg-white/10" onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}>
-              {i18n.language === 'en' ? 'ع' : 'EN'}
-            </Button>
-            <button 
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="text-sm font-bold tracking-widest text-white/70 hover:text-white transition-colors uppercase"
-            >
-              {t('landing.contactUs')}
-            </button>
-<Link to="/login">
-              <Button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-none px-8 h-12 uppercase tracking-widest text-xs font-bold transition-all">
-              {t('landing.signIn')}
-              </Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-none px-8 h-12 uppercase tracking-widest text-xs font-bold transition-all">
-              {t('landing.signUp')}
-              </Button>
-            </Link>
-          </div>
-        </nav>
+   <nav className="container mx-auto px-4 lg:px-6 py-4 lg:py-6 flex flex-col lg:flex-row items-center justify-between gap-4 relative z-10">
+ 
+  <div className="flex items-center space-x-3">
+    <BookOpen className="h-6 w-6 lg:h-8 lg:w-8 text-white" strokeWidth={1.5} />
+    <span className="text-xl lg:text-2xl font-extrabold tracking-tighter uppercase">Mouktassab</span>
+  </div>
+    
+  <div className="flex flex-wrap items-center justify-center gap-2 lg:gap-4">
+   
+    <Button 
+      variant="ghost" 
+      className="text-white hover:bg-white/10 text-sm lg:text-base"
+      onClick={() => i18n.changeLanguage(i18n.language === 'en' ? 'fr' : 'en')}
+    >
+      {i18n.language === 'en' ? 'ع' : 'EN'}
+    </Button>
+    
+    
+    <button 
+      onClick={(e) => {
+        e.preventDefault();
+        document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+      }}
+      className="text-xs lg:text-sm font-bold tracking-widest text-white/70 hover:text-white transition-colors uppercase"
+    >
+      {t('landing.contactUs')}
+    </button>
+    
+   
+    <Link to="/login">
+      <Button className="bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-none px-4 lg:px-8 h-10 lg:h-12 uppercase tracking-widest text-xs font-bold transition-all">
+        {t('landing.signIn')}
+      </Button>
+    </Link>
+    
+    
+    <Link to="/signup">
+      <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-none px-4 lg:px-8 h-10 lg:h-12 uppercase tracking-widest text-xs font-bold transition-all">
+        {t('landing.signUp')}
+      </Button>
+    </Link>
+  </div>
+</nav>
 
         {/* Hero Section */}
         <section className="container mx-auto px-6 py-10 flex flex-col items-center text-center gap-12 relative z-10">
