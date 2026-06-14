@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect} from 'react';
 import { useTranslation } from 'react-i18next';
 import { notificationApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,7 @@ export default function Notifications({ onClose }: NotificationsProps) {
   const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
-  const observerRef = useRef<IntersectionObserver | null>(null);
+  
 
   useEffect(() => {
     loadNotifications();
@@ -50,31 +50,7 @@ export default function Notifications({ onClose }: NotificationsProps) {
     }
   };
 
-  useEffect(() => {
-    observerRef.current = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const notificationId = parseInt(entry.target.getAttribute('data-notification-id') || '0');
-          const notification = notifications.find(n => n.id === notificationId);
-          if (notification && !notification.is_read) {
-            markAsRead(notificationId);
-          }
-        }
-      });
-    }, { threshold: 0.5 });
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [notifications]);
-
-  const notificationRef = (el: HTMLDivElement | null) => {
-    if (el && observerRef.current) {
-      observerRef.current.observe(el);
-    }
-  };
+ 
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -143,9 +119,13 @@ export default function Notifications({ onClose }: NotificationsProps) {
             <div className="divide-y">
               {notifications.map((notification) => (
                 <div
-                  key={notification.id}
-                  ref={notificationRef}
+                  key={notification.id}              
                   data-notification-id={notification.id}
+                  onMouseEnter={() => {
+                    if (!notification.is_read) {
+                      markAsRead(notification.id);
+                    }
+                  }}
 className={`p-4 hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors ${
                     !notification.is_read ? 'bg-blue-50 dark:bg-blue-950' : ''
                   }`}
