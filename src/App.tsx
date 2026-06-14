@@ -28,9 +28,11 @@ function HomeRedirect() {
       apiClient.post('/users/token/refresh/', { refresh_token: pendingToken })
         .then(() => {
           localStorage.removeItem('pending_refresh_token');
+          setRestoringSession(false);
         })
         .catch(() => {
           localStorage.removeItem('pending_refresh_token');
+          setRestoringSession(false);
           navigate('/login');
         });
     }
