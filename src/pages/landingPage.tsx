@@ -176,7 +176,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
     <BookOpen className="h-6 w-6 lg:h-8 lg:w-8 text-white" strokeWidth={1.5} />
     <span className="text-xl lg:text-2xl font-extrabold tracking-tighter uppercase">Mouktassab</span>
   </div>
-    
+
   <div className="flex flex-wrap items-center justify-center gap-2 lg:gap-4">
    
     <Button 
@@ -217,15 +217,17 @@ const handleContactSubmit = async (e: React.FormEvent) => {
         {/* Hero Section */}
         <section className="container mx-auto px-6 py-10 flex flex-col items-center text-center gap-12 relative z-10">
           <div className="max-w-5xl space-y-10 relative">
-            {/* <div className="slider-thumb-wrapper">
-              <div className="slider-thumb"></div>
-            </div> */}
-            <h1 className="text-6xl md:text-[7rem] font-black leading-[0.95] tracking-tighter uppercase relative">
-            <span className="block min-w-[10ch]" style={{ minWidth: 'max-content' }}><TypeWriter /></span> <span className="inline-block" style={{ minWidth: 'max-content' }}>{t('landing.management')}</span>  <br/> <span className="inline-block text-white/60 " style={{ minWidth: 'max-content' }}>{t('landing.reimagined')}</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-white/80 font-light leading-relaxed max-w-3xl mx-auto relative">
-            {t('landing.description')}
-            </p>
+        <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[7rem] font-black leading-[1.1] sm:leading-[0.95] tracking-tighter uppercase relative text-center px-4">
+          <div className="flex flex-col items-center gap-1 sm:gap-2">
+            <span><TypeWriter /></span>
+            <span>{t('landing.management')}</span>
+            <span className="text-white/60">{t('landing.reimagined')}</span>
+          </div>
+        </h1>
+
+        <p className="text-base sm:text-lg md:text-2xl text-white/80 font-light leading-relaxed max-w-3xl mx-auto relative px-6">
+          {t('landing.description')}
+        </p>
 <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8 relative">
               <Link to="/signup">
                 <Button className="bg-white text-black hover:bg-gray-200 rounded-none h-14 px-10 text-sm font-bold uppercase tracking-[0.2em] transition-all">
