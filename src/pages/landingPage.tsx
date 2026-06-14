@@ -13,6 +13,7 @@ import slide3 from '@/assets/teacher_dashboard.png';
 import appScreenshot2 from '@/assets/Notifications.jpg';
 import appScreenshot1 from '@/assets/login.jpg';
 import appScreenshot3 from '@/assets/chat.jpg';
+import googlePlayButton from '@/assets/google_play.webp'
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export default function LandingPage() {
@@ -371,7 +372,7 @@ const handleContactSubmit = async (e: React.FormEvent) => {
               <div className="flex flex-col items-start">
              
                   <img 
-                       src="src/assets/google_play.webp" 
+                       src={googlePlayButton} 
                        alt="Get it on Google Play"
                        className="h-12 w-auto"  
                   />
