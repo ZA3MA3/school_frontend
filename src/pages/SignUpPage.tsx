@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Moon, Sun, Plus, Trash2, BookOpen } from 'lucide-react';
+import { Loader2, Moon, Sun, Plus, Trash2 } from 'lucide-react';
 import { studentApi } from '@/lib/api';
 import logo from '@/assets/mouktassab.png';
 
@@ -907,7 +907,11 @@ export default function SignUpPage() {
         }
       `}</style>
       <Link to="/" className="absolute top-6 left-6 z-20 flex items-center gap-2 hover:opacity-80 transition-opacity">
-      <BookOpen className="h-8 w-8 text-primary" strokeWidth={1.5} />
+      <img 
+      src={logo} 
+      alt="Book icon"
+      className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12"
+    />
       <span className="text-2xl font-extrabold tracking-tighter uppercase dark:text-white text-gray-900">
         Mouktassab
       </span>
