@@ -14,6 +14,8 @@ import appScreenshot2 from '@/assets/Notifications.jpg';
 import appScreenshot1 from '@/assets/login.jpg';
 import appScreenshot3 from '@/assets/chat.jpg';
 import googlePlayButton from '@/assets/google_play.webp';
+import logo from '@/assets/mouktassab.png';
+
 const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 export default function LandingPage() {
@@ -173,7 +175,13 @@ const handleContactSubmit = async (e: React.FormEvent) => {
    <nav className="container mx-auto px-4 lg:px-6 py-4 lg:py-6 flex flex-col lg:flex-row items-center justify-between gap-4 relative z-10">
  
   <div className="flex items-center space-x-3">
-    <BookOpen className="h-6 w-6 lg:h-8 lg:w-8 text-white" strokeWidth={1.5} />
+   
+    <img 
+      src={logo} 
+      alt="Book icon"
+      className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12"
+    />
+
     <span className="text-xl lg:text-2xl font-extrabold tracking-tighter uppercase">Mouktassab</span>
   </div>
 
@@ -466,7 +474,11 @@ const handleContactSubmit = async (e: React.FormEvent) => {
       <footer className="border-t border-white/10 bg-black py-16">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex items-center space-x-3">
-            <BookOpen className="h-6 w-6 text-white" strokeWidth={1.5} />
+          <img 
+            src={logo} 
+            alt="Book icon"
+            className="h-8 w-8 md:h-10 md:w-10 lg:h-12 lg:w-12"
+          />
             <span className="text-xl font-black text-white tracking-tighter uppercase">Mouktassab</span>
           </div>
           <p className="text-white/30 text-xs font-bold tracking-[0.15em] uppercase">

@@ -16,8 +16,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { GraduationCap, Loader2, Moon, Sun, Plus, Trash2, BookOpen } from 'lucide-react';
+import { Loader2, Moon, Sun, Plus, Trash2, BookOpen } from 'lucide-react';
 import { studentApi } from '@/lib/api';
+import logo from '@/assets/mouktassab.png';
 
 interface ClassItem {
   id: number;
@@ -322,10 +323,14 @@ export default function SignUpPage() {
        
           <Card className="w-full max-w-md dark:bg-zinc-800 relative z-10">
             <CardHeader className="space-y-1">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-primary p-3 rounded-full">
-                  <GraduationCap className="h-8 w-8 text-primary-foreground" />
-                </div>
+              <div className="flex items-center justify-center ">
+              
+          <img 
+            src={logo} 
+            alt="Book icon"
+            className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20"
+          />
+
               </div>
               <CardTitle className="text-2xl text-center dark:text-white">Sign Up</CardTitle>
               <CardDescription className="text-center dark:text-gray-400">
@@ -414,10 +419,14 @@ export default function SignUpPage() {
         return (
           <Card className="w-full max-w-md dark:bg-zinc-800 relative z-10">
             <CardHeader className="space-y-1">
-              <div className="flex items-center justify-center mb-4">
-                <div className="bg-primary p-3 rounded-full">
-                  <GraduationCap className="h-8 w-8 text-primary-foreground" />
-                </div>
+              <div className="flex items-center justify-center ">
+              
+                <img 
+            src={logo} 
+            alt="Book icon"
+            className="h-12 w-12 md:h-16 md:w-16 lg:h-20 lg:w-20"
+          />
+                
               </div>
               <CardTitle className="text-2xl text-center dark:text-white">
                 Phone Verification
