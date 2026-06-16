@@ -143,10 +143,11 @@ export default function ParentDashboard() {
   const [predictions, setPredictions] = useState<{ [studentId: number]: PredictionResult }>({});
   const [predicting, setPredicting] = useState<number | null>(null);
   const [assigningExerciseId, setAssigningExerciseId] = useState<number | null>(null);
-const [levelFilter, setLevelFilter] = useState<string>('all');
+  const [levelFilter, setLevelFilter] = useState<string>('all');
   const [classFilter, setClassFilter] = useState<string>('');
   const [skillFilter, setSkillFilter] = useState<number[]>([]);
   const [skillsList, setSkillsList] = useState<{ id: number; name: string }[]>([]);
+  const [modelLoading, setModelLoading] = useState(false);
 
 const fetchAssignableExercises = async (studentId: number) => {
     try {
@@ -215,7 +216,10 @@ useEffect(() => {
       setPredictions(prev => ({ ...prev, [studentId]: result }));
     } catch (error: any) {
       console.error('Error predicting:', error);
-      alert('Failed to get prediction: ' + (error.response?.data?.detail || error.message));
+      if (error.response?.status === 503) {
+        setModelLoading(true);
+      }else{
+      alert('Failed to get prediction: ' + (error.response?.data?.detail || error.message));}
     } finally {
       setPredicting(null);
     }
@@ -758,10 +762,18 @@ childAttendance.map((childData) => (
               <CardDescription>Predict student dropout/graduation outcomes</CardDescription>
             </CardHeader>
             <CardContent>
+              {modelLoading && (
+                    <div className="mb-4 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
+                      <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                         Prediction model is still loading, please try again in a moment.
+                      </p>
+                    </div>
+                  )}
               {children.length === 0 ? (
                 <p className="text-muted-foreground">No children linked to your account yet</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
                   {children.map((child) => {
                     const prediction = predictions[child.id];
                     return (
