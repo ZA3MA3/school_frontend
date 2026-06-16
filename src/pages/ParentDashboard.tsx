@@ -218,6 +218,9 @@ useEffect(() => {
       console.error('Error predicting:', error);
       if (error.response?.status === 503) {
         setModelLoading(true);
+        setTimeout(() => {
+          setModelLoading(false);
+        }, 30000);
       }else{
       alert('Failed to get prediction: ' + (error.response?.data?.detail || error.message));}
     } finally {
